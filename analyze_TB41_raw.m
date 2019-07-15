@@ -48,9 +48,19 @@ dt_rew_frames = floor(dt_rew / 0.2);
 % samples_start = cell2mat(data.response.samples_start);
 %dX = data.response.dx;
 ballT = data.response.time;
-ballT = ballT - ballT(1); % So that ballT starts at 0
+%ballT = ballT - ballT(1); % So that ballT starts at 0
 fs = (length(ballT) - 1) / (ballT(end) - ballT(1));
 dx_filt = lowpass(data.response.dx, 0.2);
+
+% Convert cells to mat
+precueS = cell2mat(data.response.precue_samples_start);
+startS = cell2mat(data.response.samples_start);
+rewardS = cell2mat(data.response.samples_reward);
+
+% plot
+ball_precueT = data.response.time(precueS);
+ball_startT = data.response.time(startS);
+ball_rewardT = data.response.time(rewardS);
 
 
 %%
@@ -77,6 +87,7 @@ goodtrialsID = find(goodtrials);
 
 
 %% Make the predictors
+disp('Making predictor matrix...');
 ntrialsgood = sum(goodtrials) - 1;
 trial_lengths = diff(ixCue);
 
@@ -119,37 +130,62 @@ end
 % %%    
 % Build the time information
 balldata = cell(ntrialsgood, 1);
+speedCell = cell(ntrialsgood, 1);
 for i = 1:ntrialsgood
+    %figure;
     T = trial_lengths(goodtrialsID(i));
-    startT = data.response.earlyCueTime(goodtrialsID(i));
-    endT = data.response.earlyCueTime(goodtrialsID(i) + 1);
-    tpoints = linspace(startT, endT, T + 1);
+    startT = ball_precueT(goodtrialsID(i));
+    endT = ball_precueT(goodtrialsID(i) + 1);
+    tpoints = linspace(startT, endT, T);
+    
+    start_id = find(ballT > startT, 1, 'first');
+    end_id = find(ballT > endT, 1, 'first');
+    
+    %clean up multiple samples
+    ballT_trial = ballT(start_id : end_id);
+    [uniqueT, ic, ~] = unique(ballT_trial);
+    dx_trial = data.response.dx(start_id : end_id);
+    dx_unique = dx_trial(ic);
+    
+    resamp = interp1(uniqueT, dx_unique, tpoints);
+    resamp(1) = dx_unique(1);
+    
+%     plot(ballT_trial, dx_trial);
+%     hold on;
+%     plot(tpoints, resamp);
+   
+    
     
     % Find the points of dx_filt that are closest to tpoints
-    [~,ixdx] = min(abs(tpoints - ballT),[],1);
-    balldata{i} = dx_filt(ixdx(1:end-1));
+    %[~,ixdx] = min(abs(tpoints - ballT),[],1);
+    %balldata{i} = dx_filt(ixdx(1:end-1));
+    
+    balldata{i} = resamp';
+    speedCell{i} = abs(resamp)';
 end   
 
 %% Balldata visualization
-start = ixdx(1);
-final = ixdx(end);
-figure;
-plot(start:final, dx_filt(start:final));
-hold on;
-plot(ixdx, dx_filt(ixdx), 'o');
+% start = ixdx(1);
+% final = ixdx(end);
+% figure;
+% plot(start:final, dx_filt(start:final));
+% hold on;
+% plot(ixdx, dx_filt(ixdx), 'o');
 
 %%
 figure;
-plot(ballT - ballT(1), data.response.dx);
+plot(ballT, dx_filt);
 hold on;
 for i = 1:ntrials
-    startT = data.response.trialstart(i);
-    cueT = data.response.earlyCueTime(i);
-    plot([cueT, cueT], [-20 20], 'k');
+    start_id = ball_startT(i);
+    cue_id = ball_precueT(i);
+    plot([cue_id, cue_id], [-20 20], 'k');
     if choice(i) == 1
-        plot([startT, startT], [-20 20], 'r');
+        plot([start_id, start_id], [-20 20], 'r');
     elseif choice(i) == 2
-        plot([startT, startT], [-20 20], 'b');
+        plot([start_id, start_id], [-20 20], 'b');
+    else
+        plot([start_id, start_id], [-20 20], 'g');
     end
     
 end
@@ -162,11 +198,11 @@ figure;
 hold on;
 for i = 1:ntrialsgood
     T = numel(cue_onsetCells{i});
-    plot((1:T) + 50 * i, cue_onsetCells{i} * 20, 'b');
-    plot((1:T) + 50 * i, left_onsetCells{i} * 20, 'r');
-    plot((1:T) + 50 * i, right_onsetCells{i} * 20, 'g');
+    plot((1:T) + 50 * i, cue_onsetCells{i} * 20, 'g');
+    plot((1:T) + 50 * i, left_onsetCells{i} * 20, 'b');
+    plot((1:T) + 50 * i, right_onsetCells{i} * 20, 'r');
     plot((1:T) + 50 * i, rewardsCell{i} * 20, 'k');
-    plot((1:T) + 50 * i, balldata{i}, 'k--');
+    plot((1:T) + 50 * i, speedCell{i}, 'k--');
 end
 
 ylim([-30 30])
@@ -210,7 +246,7 @@ end
 approach = 'norefit';
 
 %pred_types_cell_group = {'event', 'whole-trial', 'whole-trial', 'whole-trial', 'continuous'};
-
+disp('Fitting encoding model...')
 [relative_contrib,~,r2val] = process_encoding_model(pred_allmat, pred_inds_cell, neural_act_mat, pred_types_cell,approach);
 
 %% Visualize
@@ -228,3 +264,4 @@ factors = {'Cue', 'LeftStim', 'RightStim', 'Reward', 'Choice', 'PrevChoice', 'Di
 ylabel('Relative Contribution');
 
 xticklabels(factors);
+set(gca, 'FontSize', 16);

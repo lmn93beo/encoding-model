@@ -20,7 +20,9 @@ for k=1:length(test_trials_folds)
     if ~isempty(inds_to_drop)
         switch drop_type
             case 'norefit'
-                curB = glmfit(cur_Xtrain,cur_Ytrain,'normal','constant','on');
+                Xones = [ones(size(cur_Xtrain,1),1) cur_Xtrain];
+                curB = Xones \ cur_Ytrain;
+                %curB = glmfit(cur_Xtrain,cur_Ytrain,'normal','constant','on');
                 curB(inds_to_drop+1)=0;
                 cur_Ypred = [ones(size(cur_Xtest,1),1) cur_Xtest]*curB;
             case 'refit'
@@ -31,7 +33,9 @@ for k=1:length(test_trials_folds)
                 error('unknown drop type')
         end
     else
-        curB = glmfit(cur_Xtrain,cur_Ytrain,'normal','constant','on');
+        %curB = glmfit(cur_Xtrain,cur_Ytrain,'normal','constant','on');
+        Xones = [ones(size(cur_Xtrain,1),1) cur_Xtrain];
+        curB = Xones \ cur_Ytrain;
         cur_Ypred = [ones(size(cur_Xtest,1),1) cur_Xtest]*curB;
     end
     all_predicted(test_trials_folds{k},1) = mat2cell(cur_Ypred ,trial_length_vec(test_trials_folds{k}),1);

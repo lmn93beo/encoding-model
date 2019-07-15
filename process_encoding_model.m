@@ -51,7 +51,11 @@ max_poly_deg = 3;
 full_R2_vec = zeros(numcells,1);
 partial_R2_vec = zeros(numcells,length(pred_inds_cell));
 relative_contrib = zeros(numcells,length(pred_inds_cell));
+f = waitbar(0,'Please wait...');
 for cellctr = 1:numcells
+    waitbar(cellctr / numcells, f,...
+        sprintf('Fitting cell %d of %d...\n', cellctr, numcells));
+    
     cur_good_trials = 1:find(defined_mat(:,cellctr),1,'last');
     num_trials_per_fold = ceil(length(cur_good_trials)/num_cv_folds);
     
@@ -169,5 +173,5 @@ for cellctr = 1:numcells
     
 end
 
-
+close(f);
 
