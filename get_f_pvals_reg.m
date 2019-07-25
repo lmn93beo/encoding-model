@@ -1,27 +1,30 @@
-function [p_vec,F_vec] = get_f_pvals_reg(Xmat, yvec, pred_inds_cell)
-% Full model regression
-wfull = Xmat\yvec;
-error = yvec - Xmat * wfull;
-SSE_f = sum(error .^ 2);
+function [Fp_vec,F_vec]=get_f_pvals_reg(X,y,preds_to_test_cell)
 
-n = size(Xmat, 1);
-k = size(Xmat, 2);
+X = [ones(size(X,1),1) X];
+n = size(X,1);  % number of observations
+k = size(X,2);  % number of variables (including constant)
 
-% Partial regressions
-nfactors = length(pred_inds_cell);
-for i = 1:nfactors
-    % Find partial SSE
-    pred_id = pred_inds_cell{i};
-    X_part = Xmat;
-    X_part(:,pred_id) = [];
-    w_part = X_part\yvec;
-    error_part = yvec - X_part * w_part;
-    SSE_p = sum(error_part .^ 2);
+b = X \ y;                 % estimate b with least squares
+u = y - X * b;             % calculates residuals
+s2 = u' * u / (n - k);     % estimate variance of error term 
+BCOV = inv(X'*X) * s2;     % get covariance matrix of b 
+bse = diag(BCOV).^.5;      % standard errors
+
+
+clear Fp_vec
+for l=1:length(preds_to_test_cell)
+        preds_to_test_cell{l} = preds_to_test_cell{l}+1; %because of the constant
+
+    R = zeros(length(preds_to_test_cell{l}),k);
+    for l2 = 1:length(preds_to_test_cell{l})
+        R(l2, preds_to_test_cell{l}(l2))=1;
+    end
     
-    % Calculate F-stat
-    m = length(pred_id);
+    r = zeros(length(preds_to_test_cell{l}),1);          % Testing restriction: R * b = r
     
-    F_vec(i) = (SSE_p - SSE_f) / m / (SSE_f / (n - k));
+    num_restrictions = size(R, 1);
+    F = (R*b - r)'*inv(R * BCOV * R')*(R*b - r) / num_restrictions;   % F-stat 
+    F_vec(l) = F;
+    Fp_vec(l) = 1 - fcdf(F, num_restrictions, n - k);  % F p-val
+    
 end
-
-p_vec = nan;
