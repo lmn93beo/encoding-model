@@ -1,4 +1,5 @@
 
+%% this is only for ONE neuron
 % using the matlab histogram function yield 84 bins
 % the range of the data is 83.8333
 
@@ -43,7 +44,12 @@ for i = 1:length(bins)
     end
     
 end
-X = [-44:39];
+X = [-42:41];
 bin_array = cell2mat(bins);
 plot(X, bin_array)
+title('Averaged Neural Activity Per Ball Velocity Bin')
+xlabel('Velocity')
+ylabel('Neural Activity')
+
+
     
