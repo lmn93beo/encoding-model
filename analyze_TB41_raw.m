@@ -1,5 +1,5 @@
-options.f_folder_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model';
-options.b_file_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model\behavior_file_TB41.mat';
+options.f_folder_name = '/Users/tanyayang/Desktop/urop (summer19)/code/encoding-model';
+options.b_file_name = '/Users/tanyayang/Desktop/urop (summer19)/code/encoding-model/behavior_file_TB41.mat';
 
 options.neuropil = 1;
 options.neuropil_subt = 1;
@@ -88,7 +88,7 @@ goodtrialsID = find(goodtrials);
 
 %% Make the predictors
 disp('Making predictor matrix...');
-ntrialsgood = sum(goodtrials) - 1;
+ntrialsgood = sum(goodtrials);
 trial_lengths = diff(ixCue);
 
 % Kernel for cue onset
@@ -221,6 +221,15 @@ groupings = {1, 2, 3, 4, 5, 6, 7, 8};
      rewardsCell, choiceGood, prevchoice, difficultyGood, balldata}, ...
     pred_types_cell, groupings);
 
+% csvwrite('cue_onset.csv', cue_onsetCells)
+% csvwrite('left_onset.csv', left_onsetCells)
+% csvwrite('right_onset.csv', right_onsetCells)
+% csvwrite('rewards.csv', rewardsCell)
+% csvwrite('choices.csv', choiceGood)
+% csvwrite('previous_choices.csv', prevchoice)
+% csvwrite('difficulty.csv', difficultyGood)
+% csvwrite('movement.csv', balldata)
+
 %% Make the neural matrix (response)
 % Make the activity matrix
 goodtrialsID = find(goodtrials);
@@ -248,7 +257,24 @@ approach = 'norefit';
 %pred_types_cell_group = {'event', 'whole-trial', 'whole-trial', 'whole-trial', 'continuous'};
 disp('Fitting encoding model...')
 [relative_contrib,~,r2val] = process_encoding_model(pred_allmat, pred_inds_cell, neural_act_mat, pred_types_cell,approach);
+% csvwrite('neural_activity.csv', neural_act_mat);
+%parameter breakdown
+%process_encoding_model is our function
 
+% arguments: pred_allmat      - (our x value!) cell array correspoding to a matrix of behavioral predictors, each term is a trial and contains a matrix where rows are timepoints and columns are behavioral predictors.
+%            pred_inds_cell   - cell array where each term has a vector of indices of the predictors that belong to a specific behavioral variable
+%            neural_act_mat   - (our y value!) cell array correspoding to a matrix of activity traces, each term is a trial and contains a matrix where rows are timepoints and columns are traces correspoding to different
+%                               neurons. Timepoints where the neuronal activity is not defined (e.g. a the imaging became unstable) are filled with NaNs (Currently it is assumed that before the first NaN
+%                               activity was always defined, and after the first NaN activity is never defined).
+%            pred_types_cell  - cell array where each terms indicates the type of behavioral variable ('event', 'whole-trial', or 'continuous').
+%            approach         - 'norefit': calculate regression weights with the full model, then zero the weights correspoding to the predictors being dropped. 'refit' : calculate regression weights
+%                               without the weights correspoding to the predictors being dropped (partial model).
+%
+% outputs:   relative_contrib - a matrix where rows are behavioral variables and columns are neurons. each term is the relative contribution of the behavioral variable to the neural activity.
+%            Fstat_mat        - a matrix where rows are behavioral variables and columns are neurons. each term is the F-statistic associated with the nested model comparison where the predicted variable is the
+%                               activity of the neuron, the full model is the model containing the predictors from al behavioral variables, and the partial model is the model containing the predictors from all
+%                               variables except the one being tested. The value of this statistic shoudl be compared to a distirbution of statistic values obtained by erforing the same oprateion on shuffled 
+%                               data, directly using the p-value assocaited with the staitstic is not valid given the autocorrelations in the data
 %% Visualize
 means = nanmean(relative_contrib, 1);
 stds = nanstd(relative_contrib, 1) / sqrt(size(relative_contrib, 1));
@@ -265,3 +291,6 @@ ylabel('Relative Contribution');
 
 xticklabels(factors);
 set(gca, 'FontSize', 16);
+
+%csvwrite('relative_contributions_raw.csv',relative_contrib)
+
