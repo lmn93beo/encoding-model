@@ -17,7 +17,7 @@ opp_contrasts = data.stimuli.opp_contrast(1:ntrials);
 loc = data.stimuli.loc(1:ntrials);
 contrast = data.params.contrast;
 
-% Create the stim vectors
+% Create the stim vectors                                                  
 lstim = ones(1, ntrials) * contrast;
 rstim = ones(1, ntrials) * contrast;
 
@@ -132,7 +132,7 @@ end
 
 
 
-save('TB41_predallmat.mat', 'neural_matmat', 'predall_matmat', 'neural_act_mat', 'pred_allmat');
+%save('TB41_predallmat.mat', 'neural_matmat', 'predall_matmat', 'neural_act_mat', 'pred_allmat');
 %% Do encoding model
 approach = 'norefit';
 pred_types_cell_group = {'event', 'whole-trial', 'whole-trial', 'whole-trial', 'continuous'};

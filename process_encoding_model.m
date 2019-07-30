@@ -29,7 +29,7 @@
 %                               data, directly using the p-value assocaited with the staitstic is not valid given the autocorrelations in the data.
 
 function [relative_contrib,Fstat_mat,full_R2_vec] = process_encoding_model(pred_allmat, pred_inds_cell, neural_act_mat, pred_types_cell,approach)
-Fstat_mat = 1;
+%Fstat_mat = 1;
 numcells = size(neural_act_mat{1},2);
 numtrials_all = length(pred_allmat);
 
@@ -75,7 +75,7 @@ for cellctr = 1:numcells
     end
     
     [~,F_vec] = get_f_pvals_reg(cell2mat(cur_pred_allmat_z),zscore(cell2mat(cur_neural_act_mat)),pred_inds_cell);
-    %Fstat_mat(cellctr,:) = F_vec;
+    Fstat_mat(cellctr,:) = F_vec';
     
     % make matrix of all possible combinations of polynomial degrees for all continuous variables
     cont_inds = find_non_empty_cells(strfind(pred_types_cell,'continuous'));

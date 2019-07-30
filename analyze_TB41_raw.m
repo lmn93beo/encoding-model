@@ -1,5 +1,5 @@
-options.f_folder_name = '/Users/tanyayang/Desktop/urop (summer19)/code/encoding-model';
-options.b_file_name = '/Users/tanyayang/Desktop/urop (summer19)/code/encoding-model/behavior_file_TB41.mat';
+options.f_folder_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model';
+options.b_file_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model/behavior_file_TB41.mat';
 
 options.neuropil = 1;
 options.neuropil_subt = 1;
@@ -8,8 +8,36 @@ options.dt = [-3 5];
 [trials_dff, trials_z_dff, dff, z_dff, ix, ixCue] = getTrials_tb(options);
 ncells = size(z_dff, 1);
 
+% High-pass filter
+fprintf('Doing high pass filter...\n');
+for i = 1:ncells
+    original = z_dff(i,:);
+    filtered = highpass(original, 0.1, 5);
+    env = abs(hilbert(filtered));
+    env = lowpass(env, 0.001, 5);
+    z_dff(i,:) = filtered ./ env;
+end
+
+%% Envelope normalization
+% ncell = 1;
+% original = z_dff(ncell,:);
+% env = abs(hilbert(original));
+% % Low-pass filter
+% %env = medfilt1(env, 100);
+% env = lowpass(env, 0.001, 5);
+% figure;
+% plot(original);
+% hold on;
+% plot(env)
+% %plot(original ./ env);
+% figure;
+% plot(original ./ env);
+
+
+
+
 %% Visualize
-imagesc(dff);
+imagesc(z_dff);
 %plot(dff(1,:));
 hold on;
 for i = 1:numel(ix)
@@ -214,12 +242,12 @@ difficultyGood = difficulty(goodtrialsID);
  
 
 %% Make the predictor matrix
-pred_types_cell = {'event', 'event', 'event', 'event', 'whole-trial', 'whole-trial', 'whole-trial', 'continuous'};
-groupings = {1, 2, 3, 4, 5, 6, 7, 8};
+pred_types_cell = {'event', 'event', 'event', 'event', 'continuous'};
+base_vars = {cue_onsetCells, left_onsetCells, right_onsetCells,...
+     rewardsCell, balldata};
+spline_filename = 'Splines/spline_basis_9_order5_30pts.mat';
 
-[pred_allmat,pred_inds_cell,grouped_var_types] = make_predictor_matrix_generalcase({cue_onsetCells, left_onsetCells, right_onsetCells,...
-     rewardsCell, choiceGood, prevchoice, difficultyGood, balldata}, ...
-    pred_types_cell, groupings);
+[pred_allmat,pred_inds_cell,grouped_var_types] = make_predictor_matrix_generalcase(base_vars, pred_types_cell, spline_filename);
 
 % csvwrite('cue_onset.csv', cue_onsetCells)
 % csvwrite('left_onset.csv', left_onsetCells)
@@ -243,13 +271,16 @@ end
 neural_matmat = cell2mat(neural_act_mat);
 predall_matmat = cell2mat(pred_allmat);
 
-figure;
-cellID = 1;
-plot(neural_matmat(:,cellID));
-hold on;
-for i = 1:180
-    plot([i * 41, i * 41], [-2 10], '--');
-end
+save('TB41_encoding_structs.mat', 'neural_matmat', 'predall_matmat', 'neural_act_mat',...
+    'pred_allmat', 'left_onsetCells', 'right_onsetCells', 'rewardsCell');
+% figure;
+% cellID = 1;
+% plot(neural_matmat(:,cellID));
+% hold on;
+% 
+% % Low-pass filter
+% filtered = highpass(neural_matmat(:,cellID), 0.1, 5);
+% plot(filtered)
 
 %% Do encoding model
 approach = 'norefit';
@@ -257,6 +288,8 @@ approach = 'norefit';
 %pred_types_cell_group = {'event', 'whole-trial', 'whole-trial', 'whole-trial', 'continuous'};
 disp('Fitting encoding model...')
 [relative_contrib,~,r2val] = process_encoding_model(pred_allmat, pred_inds_cell, neural_act_mat, pred_types_cell,approach);
+fprintf('Mean R^2 value = %.2f%% \n', mean(r2val) * 100);
+
 % csvwrite('neural_activity.csv', neural_act_mat);
 %parameter breakdown
 %process_encoding_model is our function

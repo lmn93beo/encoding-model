@@ -10,7 +10,7 @@ acue = cell(1, 180);
 apr = cell(1, 180);% all previously right
 apw = cell(1, 180); % all previously wrong
 
-for k = 1:180 
+for k = 1:180
     tfs = 15; %tfs = timeframes
     cue_cells = cell(tfs, 1); %within each cell is an added double of 173 values
     left = []; %only giving us the i (index) of trials that have left stimulus
@@ -29,7 +29,8 @@ for k = 1:180
     four = [];
 
     for i = 1:length(neural_act_mat) %looping through all the trials
-
+        
+        %cue_cells{j} = neural_act_mat{i}(1:tfs, k);
         for j = 1:tfs
            cue_cells{j} = [cue_cells{j}, neural_act_mat{i}(j, k)] ; %adding the neural activity that corresponds to each cue onset
         end
@@ -137,6 +138,11 @@ for k = 1:180
     left_array = cell2mat(left_cells);
     right_array = cell2mat(right_cells);
     
+%     figure;
+%     plot(left_array, 'b');
+%     hold on;
+%     plot(mean(left_array, 2), 'r');
+    
     aleft{k} = mean(left_array, 2);
     aright{k} = mean(right_array, 2);
     aone{k} = mean(one_array, 2);
@@ -179,3 +185,9 @@ all_pw = cell2mat(apw);
  % can use sum(op_x(:) = val) to calculate how many points are in each
  % timeframe
 
+ plot(all_left)
+ 
+ %% Save the relevant variables
+ save('TB41_behavior_summary.mat', 'prev_right', 'prev_wrong', 'left', 'right',...
+     'correct', 'incorrect', 'stim_onset_per_trial', 'one', 'two', 'three', 'four');
+ 

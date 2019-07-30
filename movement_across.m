@@ -17,7 +17,7 @@ each_trial = cell(173, 1);
 cropped_ball_data = [];
 neural_data = [];
 for i = 1:length(balldata)
-    if find(balldata{i}) ~0; %if there's ball data e
+    if find(balldata{i}) ~= 0; %if there's ball data e
         frames = find(balldata{i});
         s = frames(1);
         e = frames(end);

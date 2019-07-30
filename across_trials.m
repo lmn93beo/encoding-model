@@ -57,7 +57,8 @@ for i = 1:length(neural_act_mat) %looping through all the trials
         end
     else %when there's no reward
         incorrect = [incorrect, i];
-        if i~173;
+        if i~=173;
+            disp('here')
             prev_wrong = [prev_wrong, i + 1];
         end
     end
@@ -78,16 +79,16 @@ end
 
 %% difficulty levels
 
-one_array = loop_across(neural_act_mat, one, stim_onset_per_trial);
-two_array = loop_across(neural_act_mat, two, stim_onset_per_trial);
-three_array = loop_across(neural_act_mat, three, stim_onset_per_trial);
-four_array = loop_across(neural_act_mat, four, stim_onset_per_trial);
+one_array = loop_across(neural_act_mat, one, stim_onset_per_trial, 1);
+two_array = loop_across(neural_act_mat, two, stim_onset_per_trial, 1);
+three_array = loop_across(neural_act_mat, three, stim_onset_per_trial, 1);
+four_array = loop_across(neural_act_mat, four, stim_onset_per_trial, 1);
 
 %% worrying about previously correct (prev_right + prev_wrong)
 %timeframe is going to be the beginning
 
-prev_right_array = loop_across(neural_act_mat, prev_right, zeros(length(prev_right), 1) + 6);
-prev_wrong_array = loop_across(neural_act_mat, prev_wrong, zeros(length(prev_wrong), 1) + 6);
+prev_right_array = loop_across(neural_act_mat, prev_right, zeros(length(prev_right), 1) + 6, 1);
+prev_wrong_array = loop_across(neural_act_mat, prev_wrong, zeros(length(prev_wrong), 1) + 6, 1);
 %%
 reward = correct; %trial # that were correct and thus had a reward
 

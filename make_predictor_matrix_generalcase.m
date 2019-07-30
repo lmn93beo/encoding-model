@@ -27,15 +27,15 @@
 %            grouped_var_types - cell array where each term has the type ('event','whole-trial', or 'continuous') of the corresponding behavioral variable. if no value is given, then each base variable is 
 %                                considered to be a behavioral variable
 
-function [pred_allmat,pred_inds_cell,grouped_var_types] = make_predictor_matrix_generalcase(base_variables,var_types,groupings)
+function [pred_allmat,pred_inds_cell,grouped_var_types] = make_predictor_matrix_generalcase(base_variables,var_types,spline_file,groupings)
 
-if nargin<3
+if nargin<4
     groupings = mat2cell(1:length(base_variables),1,ones(1,length(base_variables)));
 end
 
 num_base_vars = length(base_variables);
 numtrials = length(base_variables{1});
-load('spline_basis30_int.mat'); % this results in the variable 'spline_basis' which is used for event variables. It is curently built using 7 splines and 30 timepoints. 
+load(spline_file); % this results in the variable 'spline_basis' which is used for event variables. It is curently built using 7 splines and 30 timepoints. 
                                 % change this if you want a different spline basis set.
 
 % find the first cell array base variable to get from it the number of timepoints in each trial
