@@ -51,9 +51,14 @@ def make_neuron_list(rawdata, field, cell_lst):
     return neurons
 
 
-neuron = make_neuron_obj(raw_encoding_struct, 'neural_act_mat', 0)
-neuron.plot_all_trials()
-#neurons = make_neuron_list(raw_encoding_struct, 'neural_act_mat', np.arange(180))
+#neuron = make_neuron_obj(raw_encoding_struct, 'neural_act_mat', 0)
+#neuron.plot_all_trials()
+neurons = make_neuron_list(raw_encoding_struct, 'neural_act_mat', np.arange(180))
+
+# Align
+print('Aligning to stim onset ...')
+for neuron in neurons:
+    neuron.align_activity(stim_onset_per_trial, [-5, 18])
 
 
 # For collecting all the neurons
