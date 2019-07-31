@@ -14,15 +14,26 @@ class Neuron(object):
         self.activity = activity
         self.ntrials = len(activity)
         self.aligned_activity = []
+        self.neuron_class = -1
 
-    def plot_all_trials(self):
+    def plot_all_trials(self, trials=None):
         '''
         For plotting of all trials
+        :param trials: list of trials, if none, will plot all the trials
         :return: nothing
         '''
-        for i in range(self.ntrials):
-            print('Plotting trial', i)
-            plt.plot(self.activity[i], 'b', alpha=0.2)
+        assert self.aligned_activity != []
+
+        if trials is None:
+            trials = np.arange(self.ntrials)
+
+        extracted_trials = self.aligned_activity[trials, :]
+        print(extracted_trials.shape)
+        plt.plot(extracted_trials.T, 'b', alpha=0.1)
+        plt.plot(np.mean(extracted_trials, axis=0), 'r')
+        #for i in trials:
+        #    print('Plotting trial', i)
+        #    plt.plot(self.aligned_activity[], 'b', alpha=0.2)
         plt.show()
 
     def align_activity(self, tpoints, window):
@@ -40,6 +51,23 @@ class Neuron(object):
         self.aligned_activity = np.array(arr)
         return np.array(arr)
 
+    def classify(self):
+        '''
+        Classify the neuron based on the peak of trial-averaged activity
+        Peak time: class 0 (0 - 9 frames), class 1 (10-15 frames), class 2 (>= 16 frames)
+        :return: class of the neuron
+        '''
+        # Find peak of mean activity
+        assert(self.aligned_activity != [])
+        mean_activity = np.mean(self.aligned_activity, axis=0)
+        t_max_activity = np.argmax(mean_activity)
+        if t_max_activity < 10:
+            self.neuron_class = 0
+        elif t_max_activity < 16:
+            self.neuron_class = 1
+        else:
+            self.neuron_class = 2
+        return self.neuron_class
 
 
 class Experiment(object):

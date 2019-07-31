@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import utils
 import mat4py
+import neuron_group_operations
 import data_classes
 
 # Load data
@@ -16,69 +17,37 @@ one, two, three, four, correct, incorrect, left, right, prev_right, prev_wrong, 
                         ['one', 'two', 'three', 'four', 'correct', 'incorrect',
                          'left', 'right', 'prev_right', 'prev_wrong', 'stim_onset_per_trial'])
 
+# Being careful about one-indexing
+one -= 1
+two -= 1
+three -= 1
+four -= 1
+correct -= 1
+incorrect -= 1
+prev_right -= 1
+prev_wrong -= 1
+left -= 1
+right -= 1
+
 neural_matmat, predall_matmat = \
     utils.get_multiple_struct_fields_mat4py(raw_encoding_struct, ['neural_matmat', 'predall_matmat'])
 
-# Package a single neuron into an object
-def make_neuron_obj(rawdata, field, cellid):
-    '''
-    Create a list of neurons based on raw data
-    :param rawdata: raw data returned by mat4py.loadmat
-    :param field: field containing neural_act_mat
-    :return: a neuron object
-    '''
-    neuron_activity = []
-    ntrials = len(rawdata[field])
-    for i in range(ntrials):
-        trial_activity = utils.get_struct_field_mat4py(rawdata, 'neural_act_mat', True, i)
-        neuron_activity.append(trial_activity[:, cellid])
-        neuron = data_classes.Neuron(cellid, neuron_activity)
-    return neuron
+# Compare reward and non-reward for cells in class 2
+to_plot = [ 6,   8,  13,  14,  16,  17,  24,  29,  33,  41,  43,  46,  59,
+        60,  61,  63,  65,  69,  71,  76,  82,  83,  85,  87,  91,  96,
+        97, 108, 109, 110, 114, 117, 118, 119, 120, 122, 132, 135, 139,
+       140, 141, 143, 145, 148, 151, 156, 160, 165, 177]
+for i, neuron_id in enumerate(to_plot):
+    plt.figure()
+    neuron_group_operations.compare_conditions(raw_encoding_struct, 'neural_act_mat', stim_onset_per_trial, [-5, 18],
+                                               neuron_id, correct, incorrect)
+    plt.title('Neuron %d' % neuron_id)
 
-def make_neuron_list(rawdata, field, cell_lst):
-    '''
-    Create a list of neurons
-    :param rawdata: raw data returned by mat4py.loadmat
-    :param field: field containing neural_act_mat
-    :param cell_lst: lst of ints, cell ids
-    :return: a list of neuron objects
-    '''
-    neurons = []
-    for cellid in cell_lst:
-        print('Making neuron # ', cellid, '...')
-        neuron = make_neuron_obj(rawdata, field, cellid)
-        neurons.append(neuron)
-    return neurons
-
-
-#neuron = make_neuron_obj(raw_encoding_struct, 'neural_act_mat', 0)
-#neuron.plot_all_trials()
-neurons = make_neuron_list(raw_encoding_struct, 'neural_act_mat', np.arange(180))
-
-# Align
-print('Aligning to stim onset ...')
-for neuron in neurons:
-    neuron.align_activity(stim_onset_per_trial, [-5, 18])
-
-
-# For collecting all the neurons
-def collect_neuron_aligned(raw_data, field, onset_arr, indices, window, neur_id):
-    '''
-    :param raw_data: neural activity matrix, ntrials cells, each is T x n_neurons
-    :param field: name of field containing neural activity matrix
-    :param onset_arr: a list, indices of t = 0 time points
-    :param indices: a list indicating trial indices to extract from
-    :param window: a tuple (start, end) window to extract
-    :param neur_id: neuron to extract from
-    :return: array of ntrials x T corresponding to extracted trials of the
-    '''
-    arr = []
-    for i in range(len(indices)):
-        trial_ctr = indices[i]
-        startT = onset_arr[trial_ctr]
-        trial_act = 1
-        #arr.append(act_mat[trial_ctr][])
-
-
-correct = utils.get_struct_field(raw_behavior_summary, 'correct')
-
+#neurons = neuron_group_operations.make_neuron_list(raw_encoding_struct, 'neural_act_mat', np.arange(180))
+# Create a neuron group, align and classify
+print('Aligning and classifying...')
+neuron_group = neuron_group_operations.NeuronGroup(neurons)
+neuron_group.align_all(stim_onset_per_trial, [-5, 18])
+classes = neuron_group.classify_all()
+print('%d neurons in class 0, %d neurons in class 1, %d neurons in class 2 ' % (np.sum(classes == 0),
+                                                                                np.sum(classes == 1), np.sum(classes == 2)))
