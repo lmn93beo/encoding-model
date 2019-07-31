@@ -37,11 +37,13 @@ to_plot = [ 6,   8,  13,  14,  16,  17,  24,  29,  33,  41,  43,  46,  59,
         60,  61,  63,  65,  69,  71,  76,  82,  83,  85,  87,  91,  96,
         97, 108, 109, 110, 114, 117, 118, 119, 120, 122, 132, 135, 139,
        140, 141, 143, 145, 148, 151, 156, 160, 165, 177]
+'''
 for i, neuron_id in enumerate(to_plot):
     plt.figure()
     neuron_group_operations.compare_conditions(raw_encoding_struct, 'neural_act_mat', stim_onset_per_trial, [-5, 18],
                                                neuron_id, correct, incorrect)
     plt.title('Neuron %d' % neuron_id)
+'''
 
 #neurons = neuron_group_operations.make_neuron_list(raw_encoding_struct, 'neural_act_mat', np.arange(180))
 # Create a neuron group, align and classify
