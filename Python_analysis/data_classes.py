@@ -1,15 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import neuron_group_operations
 import seaborn as sns
 
 class Neuron(object):
     """
     A class for a neuron in ACC
     """
-    def __init__(self, cellid, activity):
+    def __init__(self, cellid, activity, exp):
         """
         :param cellid: neuron number
         :param activity: A list of ntrials np arrays, each array is 1-d activity of that trial
+        :param exp: An experiment object
         """
         self.id = cellid
         self.activity = activity
@@ -18,8 +20,11 @@ class Neuron(object):
         self.neuron_class = -1
         self.mean_activity = []
         self.t_max_activity = -1
+        #self.mean_activity_left = []
+        #self.mean_activity_right = []
+        self.exp = exp
 
-    def plot_all_trials(self, trials=None, style='lines'):
+    def plot_all_trials(self, trials=None, style='heatmap'):
         """
         For plotting of all trials
         :param trials: list of trials, if none, will plot all the trials
@@ -63,9 +68,9 @@ class Neuron(object):
         """
         # Find peak of mean activity
         assert(self.aligned_activity != [])
-        mean_activity = np.mean(self.aligned_activity, axis=0)
-        self.mean_activity = mean_activity
-        t_max_activity = np.argmax(mean_activity)
+        self.get_mean_activity()
+        #self.get_mean_activity_sides()
+        t_max_activity = np.argmax(self.mean_activity)
         self.t_max_activity = t_max_activity
         if t_max_activity < 10:
             self.neuron_class = 0
@@ -85,19 +90,70 @@ class Neuron(object):
             self.mean_activity = np.mean(self.aligned_activity, axis=0)
         return self.mean_activity
 
+    def get_mean_activity_sides(self):
+        """
+        Get the mean activity of left and right trials, separately
+        :return: nothing
+        """
+        assert self.aligned_activity != []
+
+        # Get mean of left trials
+        trials_left = self.exp.l_trials
+        trials_right = self.exp.r_trials
+        left_activity = self.aligned_activity[trials_left]
+        right_activity = self.aligned_activity[trials_right]
+
+        self.mean_activity_left = np.mean(left_activity, axis=0)
+        self.mean_activity_right = np.mean(right_activity, axis=0)
+        print('mean activity left dimensions : ', self.mean_activity_left.shape)
+
+
+    def plot_side(self, side='l', style='heatmap'):
+        """
+        Plot all trial on either left or right side
+        :param side: 'l' or 'r'
+        :return: nothing
+        """
+        if side == 'l':
+            trials_to_plot = self.exp.l_trials
+        elif side == 'r':
+            trials_to_plot = self.exp.r_trials
+        else:
+            raise ValueError("Side must be 'l' or 'r'")
+
+        self.plot_all_trials(trials=trials_to_plot, style=style)
+
+    def make_subneuron(self, trials):
+        """
+        Make a neuron that is identical with self, which only contains the trials specified in trials
+        :param trials: a list of trials to subsample
+        :return: a Neuron object
+        """
+        neuron = Neuron(self.id, self.activity[trials], self.exp)
+        neuron.aligned_activity = self.aligned_activity[trials]
+        neuron.classify()
+
+        return neuron
+
 class OneStimNeuron(Neuron):
     """
     A class for neurons in 1-stim task
     """
-    def __init__(self, cellid, activity):
+
+    def __init__(self, cellid, activity, exp):
         """
         :param cellid: cell number
         :param activity: a list of ntrials np array, each array containing cell activity
+        or a ntrials x Tpts np array
         """
         self.id = cellid
-        self.activity = activity.T
-        self.ntrials = activity.shape[1]
-        self.aligned_activity = activity.T
+        self.activity = activity
+        self.exp = exp
+        #self.mean_activity_right = []
+        self.mean_activity = []
+        #self.mean_activity_left = []
+        self.ntrials = len(activity)
+        self.aligned_activity = activity
         self.neuron_class = -1
         self.session = -1
 
@@ -106,5 +162,8 @@ class Experiment(object):
     """
     A class of trackball experiment
     """
-    def __init__(self, rawdata):
-        self.rawdata = rawdata
+    def __init__(self, exp_dict):
+        self.l_trials = exp_dict['l_trials']
+        self.r_trials = exp_dict['r_trials']
+        self.ntrials = len(self.l_trials) + len(self.r_trials)
+        self.exp_dict = exp_dict

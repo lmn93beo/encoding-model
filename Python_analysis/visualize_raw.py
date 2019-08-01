@@ -45,7 +45,7 @@ for i, neuron_id in enumerate(to_plot):
     plt.title('Neuron %d' % neuron_id)
 '''
 
-#neurons = neuron_group_operations.make_neuron_list(raw_encoding_struct, 'neural_act_mat', np.arange(180))
+neurons = neuron_group_operations.make_neuron_list(raw_encoding_struct, 'neural_act_mat', np.arange(180))
 # Create a neuron group, align and classify
 print('Aligning and classifying...')
 neuron_group = neuron_group_operations.NeuronGroup(neurons)
