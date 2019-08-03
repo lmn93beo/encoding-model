@@ -3,7 +3,7 @@ These are helper functions that are frequently used
 """
 import mat4py
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 
 def get_struct_field(data, field, subfield=None):
@@ -59,3 +59,40 @@ def get_multiple_struct_fields_mat4py(data, fields):
         extracted = get_struct_field_mat4py(data, field)
         extracted_fields.append(extracted)
     return extracted_fields
+
+
+# Plot only for individual sessions
+def plot_sessions(neuron_group):
+    sessions = neuron_group.get_session_list()
+    for i in range(np.max(sessions)):
+        to_plot_list = np.where(sessions == i)
+        mean_act = neuron_group.plot_all_means(sort=True, plotid=to_plot_list, style='heatmap')
+        #plt.close('all')
+
+
+# Compare neurons
+def plot_neurons(subgroup1, subgroup2):
+    session_id = 0
+    for i in range(subgroup1.n_neurons):
+        plt.figure()
+        plt.subplot('121')
+        subgroup1.neurons[i].plot_all_trials()
+        plt.subplot('122')
+        subgroup2.neurons[i].plot_all_trials()
+
+
+# Decide if a neuron is c or i-responsive
+def plot_example_neurons(neuron_group, id_list):
+    """
+    Plot the activity of the neurons specified in id_list, from neuron_group
+    :param neuron_group: a NeuronGroup object
+    :param id_list: a list of neurons to plot
+    :return: nothing
+    """
+    dim = int(np.sqrt(len(id_list)))
+    for i in id_list:
+        plt.subplot(dim, dim, i + 1)
+        neuron = neuron_group.neurons[i]
+        plt.errorbar(np.arange(len(neuron.mean_activity)), neuron.mean_activity, neuron.stderr_activity)
+        plt.title(str(i))
+

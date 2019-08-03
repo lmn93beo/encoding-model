@@ -1,4 +1,5 @@
 import utils
+import collections
 import data_classes
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,6 +12,10 @@ class NeuronGroup(object):
         self.neurons = neuron_lst
         self.n_neurons = len(neuron_lst)
         self.exp = neuron_lst[0].exp
+
+        # Check that no two cells have the same id
+        id_lst = [neuron.id for neuron in neuron_lst]
+        assert len(np.unique(id_lst)) == len(id_lst)
 
         # Classify all neurons in group
         classes = []
@@ -150,7 +155,11 @@ class NeuronGroup(object):
         return mean_activities
 
 
-# Package a single neuron into an object
+"""
+Some useful functions for working with groups
+"""
+
+# Functions for creating objects from raw data
 def make_neuron_obj(rawdata, field, cellid):
     """
     Create a list of neurons based on raw data
@@ -210,6 +219,7 @@ def make_neuron_group(cell_arr, exp):
     for i in range(len(cell_arr)):
         neuron_arr = np.array(cell_arr[i]).T
         neuron = data_classes.OneStimNeuron(i, neuron_arr, exp)
+        neuron.classify()
         cell_lst.append(neuron)
 
     curr_session = -1
@@ -223,6 +233,31 @@ def make_neuron_group(cell_arr, exp):
         neuron.session = curr_session
 
     return NeuronGroup(cell_lst)
+
+# Functions for combining neuron groups
+def combine_groups_by_trials(group1, group2):
+    """
+    For combining neuron groups from the same experiment with different trials
+    The two groups need to have the same neurons (based on id)
+    :param group1: a NeuronGroup object
+    :param group2: a NeuronGroup object
+    :return: the combined NeuronGroup object
+    """
+    # Check that the id's of the two groups are the same
+    id_group1 = [neuron.id for neuron in group1.neurons]
+    id_group2 = [neuron.id for neuron in group2.neurons]
+    assert collections.Counter(id_group1) == collections.Counter(id_group2)
+
+    # Combine
+    combined_neurons = []
+    for i in range(len(id_group1)):
+        # Find the corresponding id in group2
+        group2_id = np.where(np.array(id_group2) == i)[0][0]
+        combined = data_classes.combine_neurons(group1.neurons[i], group2.neurons[group2_id])
+        combined_neurons.append(combined)
+
+    return NeuronGroup(combined_neurons)
+
 
 
 

@@ -4,6 +4,7 @@ Analyze one-stim data by Rafiq
 
 import numpy as np
 import matplotlib.pyplot as plt
+import utils
 import mat4py
 import data_classes
 import os
@@ -32,4 +33,11 @@ neur_group_c_incorr.plot_all_means(sort=True, style='heatmap')
 neur_group_i_corr.plot_all_means(sort=True, style='heatmap')
 neur_group_i_incorr.plot_all_means(sort=True, style='heatmap')
 
+# Combine groups
+neur_c = neuron_group_operations.combine_groups_by_trials(neur_group_c_corr, neur_group_c_incorr)
+
+#Plotting for validation
+utils.plot_example_neurons(neur_group_c_corr, np.arange(100))
+utils.plot_example_neurons(neur_c, np.arange(100))
+utils.plot_example_neurons(neur_group_c_incorr, np.arange(100))
 

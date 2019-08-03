@@ -19,7 +19,7 @@ class Neuron(object):
         self.aligned_activity = []
         self.neuron_class = -1
         self.mean_activity = []
-        self.stderrerr_activity = []
+        self.stderr_activity = []
         self.t_max_activity = -1
         self.exp = exp
 
@@ -151,11 +151,19 @@ class OneStimNeuron(Neuron):
         self.id = cellid
         self.activity = activity
         self.exp = exp
-        self.mean_activity = []
         self.ntrials = len(activity)
         self.aligned_activity = activity
+        self.stderr_activity = np.std(self.aligned_activity, axis=0) / np.sqrt(self.ntrials)
+        self.mean_activity = np.mean(self.aligned_activity, axis=0)
         self.neuron_class = -1
+        self.t_max_activity = -1
         self.session = -1
+
+    def copy(self):
+        copy_neuron = OneStimNeuron(self.id, self.activity[:], self.exp)
+        copy_neuron.neuron_class = self.neuron_class
+        copy_neuron.session = self.session
+        return copy_neuron
 
 
 class Experiment(object):
@@ -167,3 +175,22 @@ class Experiment(object):
         self.r_trials = exp_dict['r_trials']
         self.ntrials = len(self.l_trials) + len(self.r_trials)
         self.exp_dict = exp_dict
+
+def combine_neurons(neuron1, neuron2):
+    """
+    For combining two neurons with different trials
+    :param neuron1: a Neuron object
+    :param neuron2: a Neuron object
+    :return: a Neuron object - with combined trials
+    """
+    assert neuron1.id == neuron2.id
+    assert neuron1.activity.shape[1] == neuron2.activity.shape[1]
+    assert neuron1.session == neuron2.session
+
+    combined_activity = np.vstack((neuron1.activity, neuron2.activity))
+    combined = OneStimNeuron(neuron1.id, combined_activity, neuron1.exp)
+    combined.session = neuron1.session
+    combined.classify()
+
+    return combined
+

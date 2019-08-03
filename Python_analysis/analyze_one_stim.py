@@ -1,7 +1,7 @@
 """
 Analyze one-stim data by Rafiq
 """
-
+import utils
 import numpy as np
 import matplotlib.pyplot as plt
 import mat4py
@@ -30,34 +30,9 @@ for i in range(np.max(session_lst)):
     subgroups_c.append(subgroup_c)
     subgroups_i.append(subgroup_i)
 
-# Plot only for individual sessions
-def plot_sessions():
-    sessions = neuron_group.get_session_list()
-    for i in range(np.max(sessions)):
-        to_plot_list = np.where(sessions == i)
-        mean_act = neuron_group.plot_all_means(sort=True, plotid=to_plot_list, style='heatmap')
-        #plt.close('all')
 
-# Compare neurons
-def plot_neurons():
-    session_id = 0
-    for i in range(subgroups_i[session_id].n_neurons):
-        plt.figure()
-        plt.subplot('121')
-        subgroups_c[0].neurons[i].plot_all_trials()
-        plt.subplot('122')
-        subgroups_i[0].neurons[i].plot_all_trials()
-
-# Decide if a neuron is c or i-responsive
-session_id = 3
-for i in range(100):
-    plt.subplot(10, 10, i + 1)
-    i_trials = subgroups_i[session_id].neurons[i]
-    c_trials = subgroups_c[session_id].neurons[i]
-    plt.errorbar(np.arange(len(c_trials.mean_activity)), c_trials.mean_activity, c_trials.stderr_activity)
-    plt.errorbar(np.arange(len(i_trials.mean_activity)), i_trials.mean_activity, i_trials.stderr_activity)
-    plt.title(str(i + 1))
-
-
+plt.figure()
+utils.plot_example_neurons(subgroups_c[0], np.arange(100))
+utils.plot_example_neurons(subgroups_i[0], np.arange(100))
 
 
