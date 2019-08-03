@@ -208,7 +208,7 @@ def make_neuron_group(cell_arr, exp):
     """
     cell_lst = []
     for i in range(len(cell_arr)):
-        neuron_arr = np.array(cell_arr[i])
+        neuron_arr = np.array(cell_arr[i]).T
         neuron = data_classes.OneStimNeuron(i, neuron_arr, exp)
         cell_lst.append(neuron)
 
@@ -220,7 +220,7 @@ def make_neuron_group(cell_arr, exp):
             print('Changed, current ntrials = ', neuron.ntrials)
             print('Current session = ', curr_session)
             curr_ntrials = neuron.ntrials
-        neuron.session = curr_sessionsession = -1
+        neuron.session = curr_session
 
     return NeuronGroup(cell_lst)
 

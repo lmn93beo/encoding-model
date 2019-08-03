@@ -16,55 +16,19 @@ elif os.environ['COMPUTERNAME'] == 'homecomputer':
 raw_i = mat4py.loadmat(filedir + '/raw_i.mat')['raw_i']
 raw_c = mat4py.loadmat(filedir + '/raw_c.mat')['raw_c']
 
-# Create neurons
-cell_lst = []
-for i in range(len(raw_i)):
-    cell_arr_i = np.array(raw_i[i])
-    cell_arr_c = np.array(raw_c[i])
+exp = data_classes.Experiment(dict(l_trials=[0], r_trials=[1]))
+neuron_group_c = neuron_group_operations.make_neuron_group(raw_c, exp)
+neuron_group_i = neuron_group_operations.make_neuron_group(raw_i, exp)
 
-    ntrials_i = cell_arr_i.shape[1]
-    ntrials_c = cell_arr_c.shape[1]
-
-    # Make corresponding experiment object
-    exp = data_classes.Experiment(dict(l_trials=np.arange(ntrials_i),
-                                       r_trials=np.arange(ntrials_i, ntrials_i + ntrials_c)))
-
-    cell_arr = np.hstack((cell_arr_i, cell_arr_c)).T
-    neuron = data_classes.OneStimNeuron(i, cell_arr, exp)
-    cell_lst.append(neuron)
-
-# Assign session to neurons
-curr_session = -1
-curr_ntrials = -1
-for neuron in cell_lst:
-    if neuron.ntrials != curr_ntrials:
-        curr_session += 1
-        print('Changed, current ntrials = ', neuron.ntrials)
-        print('Current session = ', curr_session)
-        curr_ntrials = neuron.ntrials
-    neuron.session = curr_session
-
-neuron_group = neuron_group_operations.NeuronGroup(cell_lst)
-
-# Make subgroups based on sessions
-session_lst = neuron_group.get_session_list()
-subgroups_by_session = []
+session_lst = neuron_group_c.get_session_list()
+subgroups_c = []
+subgroups_i = []
 for i in range(np.max(session_lst)):
     neuron_lst = np.where(session_lst == i)[0]
-    subgroup = neuron_group.make_subgroup_by_neurons(neuron_lst)
-    subgroups_by_session.append(subgroup)
-
-# Split each group based on left or right
-subgroups_left = []
-subgroups_right = []
-for subgroup in subgroups_by_session:
-    left_trials = subgroup.exp.l_trials
-    right_trials = subgroup.exp.r_trials
-    subgroup_left = subgroup.make_subgroup_by_trials(left_trials)
-    subgroup_right = subgroup.make_subgroup_by_trials(right_trials)
-    subgroups_left.append(subgroup_left)
-    subgroups_right.append(subgroup_right)
-    #subgroup.plot_all_means(sort=True, style='heatmap')
+    subgroup_c = neuron_group_c.make_subgroup_by_neurons(neuron_lst)
+    subgroup_i = neuron_group_i.make_subgroup_by_neurons(neuron_lst)
+    subgroups_c.append(subgroup_c)
+    subgroups_i.append(subgroup_i)
 
 # Plot only for individual sessions
 def plot_sessions():
@@ -77,21 +41,21 @@ def plot_sessions():
 # Compare neurons
 def plot_neurons():
     session_id = 0
-    for i in range(3): #(subgroups_right[session_id].n_neurons):
+    for i in range(subgroups_i[session_id].n_neurons):
         plt.figure()
         plt.subplot('121')
-        subgroups_left[0].neurons[i].plot_all_trials()
+        subgroups_c[0].neurons[i].plot_all_trials()
         plt.subplot('122')
-        subgroups_right[0].neurons[i].plot_all_trials()
+        subgroups_i[0].neurons[i].plot_all_trials()
 
-# Decide if a neuron is left or right-responsive
+# Decide if a neuron is c or i-responsive
 session_id = 3
 for i in range(100):
     plt.subplot(10, 10, i + 1)
-    left_trials = subgroups_left[session_id].neurons[i]
-    right_trials = subgroups_right[session_id].neurons[i]
-    plt.errorbar(np.arange(len(left_trials.mean_activity)), left_trials.mean_activity, left_trials.stderr_activity)
-    plt.errorbar(np.arange(len(right_trials.mean_activity)), right_trials.mean_activity, right_trials.stderr_activity)
+    i_trials = subgroups_i[session_id].neurons[i]
+    c_trials = subgroups_c[session_id].neurons[i]
+    plt.errorbar(np.arange(len(c_trials.mean_activity)), c_trials.mean_activity, c_trials.stderr_activity)
+    plt.errorbar(np.arange(len(i_trials.mean_activity)), i_trials.mean_activity, i_trials.stderr_activity)
     plt.title(str(i + 1))
 
 
