@@ -13,8 +13,53 @@ if os.environ['COMPUTERNAME'] == 'DESKTOP-FN1P6HD':
     filedir = 'C:/Users/Sur lab/Documents/RafiqAnalysis'
 elif os.environ['COMPUTERNAME'] == 'homecomputer':
     filedir = 'C:/Users/Le/Dropbox (MIT)/Sur/For Nhat'
-raw_i = mat4py.loadmat(filedir + '/raw_i.mat')['raw_i']
-raw_c = mat4py.loadmat(filedir + '/raw_c.mat')['raw_c']
+raw_data = mat4py.loadmat(filedir + '/error_trial_data_20190715.mat')
+c_corr_all = raw_data['c_corr_all']
+c_incorr_all = raw_data['c_incorr_all']
+i_corr_all = raw_data['i_corr_all']
+i_incorr_all = raw_data['i_incorr_all']
+
+# Create neurons
+cell_lst_c_corr = []
+cell_lst_c_incorr = []
+cell_lst_i_corr = []
+cell_lst_i_incorr = []
+
+for i in range(len(c_corr_all)):
+    cell_arr_c_corr = np.array(c_corr_all[i])
+    cell_arr_c_incorr = np.array(c_incorr_all[i])
+    cell_arr_i_corr = np.array(i_corr_all[i])
+    cell_arr_i_incorr = np.array(i_incorr_all[i])
+
+    ntrials_c_corr = cell_arr_c_corr.shape[1]
+    ntrials_c_incorr = cell_arr_c_incorr.shape[1]
+    ntrials_i_corr = cell_arr_i_corr.shape[1]
+    ntrials_i_incorr = cell_arr_c_incorr.shape[1]
+
+    exp = data_classes.Experiment(dict(l_trials=[0], r_trials=[1]))
+    neuron_c_corr = data_classes.OneStimNeuron(i, cell_arr_c_corr, exp)
+    neuron_c_incorr = data_classes.OneStimNeuron(i, cell_arr_c_incorr, exp)
+    neuron_i_corr = data_classes.OneStimNeuron(i, cell_arr_i_corr, exp)
+    neuron_i_incorr = data_classes.OneStimNeuron(i, cell_arr_i_incorr, exp)
+
+    cell_lst_c_corr.append(neuron_c_corr)
+    cell_lst_c_incorr.append(neuron_c_incorr)
+    cell_lst_i_corr.append(neuron_i_corr)
+    cell_lst_i_incorr.append(neuron_i_incorr)
+
+# Make neuron groups
+neur_group_c_corr = neuron_group_operations.NeuronGroup(cell_lst_c_corr)
+neur_group_c_incorr = neuron_group_operations.NeuronGroup(cell_lst_c_incorr)
+neur_group_i_corr = neuron_group_operations.NeuronGroup(cell_lst_i_corr)
+neur_group_i_incorr = neuron_group_operations.NeuronGroup(cell_lst_i_incorr)
+
+# Plot
+neur_group_c_corr.plot_all_means(sort=True, style='heatmap')
+neur_group_c_incorr.plot_all_means(sort=True, style='heatmap')
+neur_group_i_corr.plot_all_means(sort=True, style='heatmap')
+neur_group_i_incorr.plot_all_means(sort=True, style='heatmap')
+
+'''
 
 # Create neurons
 cell_lst = []
@@ -96,4 +141,4 @@ for i in range(100):
 
 
 
-
+'''

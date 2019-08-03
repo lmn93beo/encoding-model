@@ -10,13 +10,25 @@ class NeuronGroup(object):
     def __init__(self, neuron_lst):
         self.neurons = neuron_lst
         self.n_neurons = len(neuron_lst)
-        self.classes = []
-        self.class0cells = []
-        self.class1cells = []
-        self.class2cells = []
-        self.mean_activities = []
-        #self.mean_activities_left = []
-        #self.mean_activities_right = []
+        self.exp = neuron_lst[0].exp
+
+        # Classify all neurons in group
+        classes = []
+        for neuron in self.neurons:
+            if len(neuron.mean_activity) == 0:
+                neuron.classify()
+            classes.append(neuron.neuron_class)
+        self.classes = np.array(classes)
+        self.class0cells = np.where(self.classes == 0)[0]
+        self.class1cells = np.where(self.classes == 1)[0]
+        self.class2cells = np.where(self.classes == 2)[0]
+
+        # Find mean activities for all neurons in group
+        mean_activities = []
+        for neuron in self.neurons:
+            assert neuron.mean_activity != []
+            mean_activities.append(neuron.mean_activity)
+        self.mean_activities = np.array(mean_activities)
 
     def align_all(self, tpoints, window):
         """
@@ -27,22 +39,6 @@ class NeuronGroup(object):
         """
         for neuron in self.neurons:
             neuron.align_activity(tpoints, window)
-
-    def classify_all(self):
-        """
-        Classify all neurons in group
-        Keeping a list of neuron classes
-        :return: an np array giving the classes for all neurons
-        """
-        classes = []
-        for neuron in self.neurons:
-            neuron.classify()
-            classes.append(neuron.neuron_class)
-        self.classes = np.array(classes)
-        self.class0cells = np.where(self.classes == 0)[0]
-        self.class1cells = np.where(self.classes == 1)[0]
-        self.class2cells = np.where(self.classes == 2)[0]
-        return np.array(classes)
 
     def get_session_list(self):
         """
@@ -69,23 +65,27 @@ class NeuronGroup(object):
             plt.hist(tmax_lst)
         return np.array(tmax_lst)
 
-    def get_all_means(self, style=None):
+    def make_subgroup_by_neurons(self, neurons):
         """
-        :return: the mean activity of neurons in the group in one plot
+        Make a subgroup containing only neurons specified in neurons
+        :param neurons: a list of neurons to include
+        :return: a NeuronGroup object
         """
-        # Find the mean activities
-        mean_activities = []
-        mean_activities_left = []
-        mean_activities_right = []
+        subneurons = [self.neurons[i] for i in neurons]
+        return NeuronGroup(subneurons)
+
+    def make_subgroup_by_trials(self, trials):
+        """
+        Make a subneuron for each neuron, and create a new group with specified trials
+        :param trials: a list of trials
+        :return: a NeuronGroup object
+        """
+        subneurons = []
         for neuron in self.neurons:
-            assert neuron.mean_activity != []
-            mean_activities.append(neuron.mean_activity)
-            #mean_activities_left.append(neuron.mean_activity_left)
-            #mean_activities_right.append(neuron.mean_activity_right)
-        self.mean_activities = np.array(mean_activities)
-        #self.mean_activities_left = np.array(mean_activities_left)
-        #self.mean_activities_right = np.array(mean_activities_right)
-        return mean_activities
+            subneuron = neuron.make_subneuron(trials)
+            subneurons.append(subneuron)
+        subgroup = NeuronGroup(subneurons)
+        return subgroup
 
     def plot_all_means(self, plotid=None, normalize=False, sort=False, style='lines', side='both'):
         """
@@ -97,14 +97,7 @@ class NeuronGroup(object):
         """
         assert self.mean_activities != []
 
-        if side == 'both':
-            mean_activities = self.mean_activities
-        elif side == 'left':
-            mean_activities = self.mean_activities_left
-        elif side == 'right':
-            mean_activities = self.mean_activities_right
-        else:
-            raise ValueError("Side must be either 'left', 'right', or 'both'")
+        mean_activities = self.mean_activities
 
         if plotid is not None:
             mean_activities = mean_activities[plotid]
@@ -137,19 +130,24 @@ class NeuronGroup(object):
             print('Shape of mean_act:', mean_activities.shape)
 
         print('Number to plot:', mean_activities.shape)
+        # Subplot 1: plot the mean activities
+        plt.figure()
+        plt.subplot('211')
         if style == 'lines':
             plt.plot(mean_activities.T)
         elif style == 'heatmap':
             if normalize:
                 plt.imshow(mean_activities, cmap='bwr', aspect='auto', vmin=-1, vmax=1)
             else:
-                plt.imshow(mean_activities, cmap='bwr', aspect='auto', vmin=-100, vmax=100)
+                plt.imshow(mean_activities, cmap='bwr', aspect='auto', vmin=-2, vmax=2)
         else:
             raise ValueError('Invalid style')
 
+        # Subplot 2: plot histograms
+        plt.subplot('212')
+        self.collect_tmax(True)
+
         return mean_activities
-
-
 
 
 # Package a single neuron into an object
@@ -199,5 +197,32 @@ def compare_conditions(rawdata, field, tpoints, window, cellid, condA, condB):
     plt.subplot(122)
     neuron.plot_all_trials(condB)
     plt.ylim((-2, 2))
+
+
+def make_neuron_group(cell_arr, exp):
+    """
+    Make a group of neuron
+    :param cell_arr: a list of ncells elements, each is a list of ntrials, each trial is a list of Tpts time
+    :param exp: an experiment
+    :return: a NeuronGroup object
+    """
+    cell_lst = []
+    for i in range(len(cell_arr)):
+        neuron_arr = np.array(cell_arr[i])
+        neuron = data_classes.OneStimNeuron(i, neuron_arr, exp)
+        cell_lst.append(neuron)
+
+    curr_session = -1
+    curr_ntrials = -1
+    for neuron in cell_lst:
+        if neuron.ntrials != curr_ntrials:
+            curr_session += 1
+            print('Changed, current ntrials = ', neuron.ntrials)
+            print('Current session = ', curr_session)
+            curr_ntrials = neuron.ntrials
+        neuron.session = curr_sessionsession = -1
+
+    return NeuronGroup(cell_lst)
+
 
 

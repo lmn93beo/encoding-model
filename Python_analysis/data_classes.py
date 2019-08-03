@@ -19,9 +19,8 @@ class Neuron(object):
         self.aligned_activity = []
         self.neuron_class = -1
         self.mean_activity = []
+        self.stderrerr_activity = []
         self.t_max_activity = -1
-        #self.mean_activity_left = []
-        #self.mean_activity_right = []
         self.exp = exp
 
     def plot_all_trials(self, trials=None, style='heatmap'):
@@ -88,6 +87,9 @@ class Neuron(object):
         assert self.aligned_activity != []
         if self.mean_activity == []:
             self.mean_activity = np.mean(self.aligned_activity, axis=0)
+            self.stderr_activity = np.std(self.aligned_activity, axis=0) / np.sqrt(self.ntrials)
+        else:
+            print('Warning: mean_activity already computed, recomputing...')
         return self.mean_activity
 
     def get_mean_activity_sides(self):
@@ -149,9 +151,7 @@ class OneStimNeuron(Neuron):
         self.id = cellid
         self.activity = activity
         self.exp = exp
-        #self.mean_activity_right = []
         self.mean_activity = []
-        #self.mean_activity_left = []
         self.ntrials = len(activity)
         self.aligned_activity = activity
         self.neuron_class = -1
