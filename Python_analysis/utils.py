@@ -90,8 +90,8 @@ def plot_example_neurons(neuron_group, id_list):
     :return: nothing
     """
     dim = int(np.sqrt(len(id_list)))
-    for i in id_list:
-        plt.subplot(dim, dim, i + 1)
+    for id, i in enumerate(id_list):
+        plt.subplot(dim, dim, id + 1)
         neuron = neuron_group.neurons[i]
         plt.errorbar(np.arange(len(neuron.mean_activity)), neuron.mean_activity, neuron.stderr_activity)
         plt.title(str(i))

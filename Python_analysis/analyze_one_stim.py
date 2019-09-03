@@ -5,9 +5,9 @@ import utils
 import numpy as np
 import matplotlib.pyplot as plt
 import mat4py
-import data_classes
+import neuron_utils
 import os
-import neuron_group_operations
+import neuron_group_utils
 
 if os.environ['COMPUTERNAME'] == 'DESKTOP-FN1P6HD':
     filedir = 'C:/Users/Sur lab/Documents/RafiqAnalysis'
@@ -16,9 +16,9 @@ elif os.environ['COMPUTERNAME'] == 'homecomputer':
 raw_i = mat4py.loadmat(filedir + '/raw_i.mat')['raw_i']
 raw_c = mat4py.loadmat(filedir + '/raw_c.mat')['raw_c']
 
-exp = data_classes.Experiment(dict(l_trials=[0], r_trials=[1]))
-neuron_group_c = neuron_group_operations.make_neuron_group(raw_c, exp)
-neuron_group_i = neuron_group_operations.make_neuron_group(raw_i, exp)
+exp = neuron_utils.Experiment(dict(l_trials=[0], r_trials=[1]))
+neuron_group_c = neuron_group_utils.make_neuron_group(raw_c, exp)
+neuron_group_i = neuron_group_utils.make_neuron_group(raw_i, exp)
 
 session_lst = neuron_group_c.get_session_list()
 subgroups_c = []
@@ -29,6 +29,9 @@ for i in range(np.max(session_lst)):
     subgroup_i = neuron_group_i.make_subgroup_by_neurons(neuron_lst)
     subgroups_c.append(subgroup_c)
     subgroups_i.append(subgroup_i)
+    subgroup_c.plot_all_means(sort=True)
+    plt.title('Contra')
+    subgroup_i.plot_all_means(sort=True, style='heatmap')
 
 
 plt.figure()

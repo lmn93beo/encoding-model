@@ -1,6 +1,6 @@
 import utils
 import collections
-import data_classes
+import neuron_utils
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -31,7 +31,7 @@ class NeuronGroup(object):
         # Find mean activities for all neurons in group
         mean_activities = []
         for neuron in self.neurons:
-            assert neuron.mean_activity != []
+            assert len(neuron.mean_activity) > 0
             mean_activities.append(neuron.mean_activity)
         self.mean_activities = np.array(mean_activities)
 
@@ -100,7 +100,7 @@ class NeuronGroup(object):
         :param style: 'lines' or 'heatmap'
         :return: an array ncells x Tpts, mean activity of the plotted cells
         """
-        assert self.mean_activities != []
+        assert len(self.mean_activities) > 0
 
         mean_activities = self.mean_activities
 
@@ -160,10 +160,11 @@ Some useful functions for working with groups
 """
 
 # Functions for creating objects from raw data
-def make_neuron_obj(rawdata, field, cellid):
+def make_neuron_obj(rawdata, field, cellid, exp):
     """
     Create a list of neurons based on raw data
     :param rawdata: raw data returned by mat4py.loadmat
+    :param exp: experiment object
     :param field: field containing neural_act_mat
     :return: a neuron object
     """
@@ -172,21 +173,22 @@ def make_neuron_obj(rawdata, field, cellid):
     for i in range(ntrials):
         trial_activity = utils.get_struct_field_mat4py(rawdata, 'neural_act_mat', True, i)
         neuron_activity.append(trial_activity[:, cellid])
-        neuron = data_classes.Neuron(cellid, neuron_activity)
+    neuron = neuron_utils.Neuron(cellid, neuron_activity, exp)
     return neuron
 
-def make_neuron_list(rawdata, field, cell_lst):
+def make_neuron_list(rawdata, field, cell_lst, exp):
     """
-    Create a list of neurons
+    Create a list of neurons from raw data
     :param rawdata: raw data returned by mat4py.loadmat
     :param field: field containing neural_act_mat
+    :param exp: experiment object
     :param cell_lst: lst of ints, cell ids
     :return: a list of neuron objects
     """
     neurons = []
     for cellid in cell_lst:
         print('Making neuron # ', cellid, '...')
-        neuron = make_neuron_obj(rawdata, field, cellid)
+        neuron = make_neuron_obj(rawdata, field, cellid, exp)
         neurons.append(neuron)
     return neurons
 
@@ -208,20 +210,38 @@ def compare_conditions(rawdata, field, tpoints, window, cellid, condA, condB):
     plt.ylim((-2, 2))
 
 
-def make_neuron_group(cell_arr, exp):
+def make_neuron_group(cell_arr, exp, session_list=[]):
     """
-    Make a group of neuron
+    Make a group of neuron, and assign the appropriate session to each neuron
     :param cell_arr: a list of ncells elements, each is a list of ntrials, each trial is a list of Tpts time
     :param exp: an experiment
+    :param session_list: a list of session numbers
     :return: a NeuronGroup object
     """
     cell_lst = []
     for i in range(len(cell_arr)):
         neuron_arr = np.array(cell_arr[i]).T
-        neuron = data_classes.OneStimNeuron(i, neuron_arr, exp)
+        neuron = neuron_utils.OneStimNeuron(i, neuron_arr, exp)
         neuron.classify()
         cell_lst.append(neuron)
 
+    if session_list == []:
+        assign_session_to_neurons(cell_lst)
+    else:
+        assert len(cell_lst) == len(session_list)
+        for i in range(len(cell_lst)):
+            cell_lst[i].session = session_list[i]
+
+    return NeuronGroup(cell_lst)
+
+
+def assign_session_to_neurons(cell_lst):
+    """
+    Automatically assign the session number to each neuron in the group,
+    based on changes in the number of trials
+    :param cell_lst: a list of neurons
+    :return: nothing (cell_lst updated in place)
+    """
     curr_session = -1
     curr_ntrials = -1
     for neuron in cell_lst:
@@ -231,8 +251,6 @@ def make_neuron_group(cell_arr, exp):
             print('Current session = ', curr_session)
             curr_ntrials = neuron.ntrials
         neuron.session = curr_session
-
-    return NeuronGroup(cell_lst)
 
 # Functions for combining neuron groups
 def combine_groups_by_trials(group1, group2):
@@ -253,7 +271,7 @@ def combine_groups_by_trials(group1, group2):
     for i in range(len(id_group1)):
         # Find the corresponding id in group2
         group2_id = np.where(np.array(id_group2) == i)[0][0]
-        combined = data_classes.combine_neurons(group1.neurons[i], group2.neurons[group2_id])
+        combined = neuron_utils.combine_neurons(group1.neurons[i], group2.neurons[group2_id])
         combined_neurons.append(combined)
 
     return NeuronGroup(combined_neurons)

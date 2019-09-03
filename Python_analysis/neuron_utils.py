@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import neuron_group_operations
+import neuron_group_utils
 import seaborn as sns
 
 class Neuron(object):
@@ -29,7 +29,7 @@ class Neuron(object):
         :param trials: list of trials, if none, will plot all the trials
         :return: nothing
         """
-        assert self.aligned_activity != []
+        assert len(self.aligned_activity) > 0
 
         if trials is None:
             trials = np.arange(self.ntrials)
@@ -66,7 +66,7 @@ class Neuron(object):
         :return: class of the neuron
         """
         # Find peak of mean activity
-        assert(self.aligned_activity != [])
+        assert len(self.aligned_activity) > 0
         self.get_mean_activity()
         #self.get_mean_activity_sides()
         t_max_activity = np.argmax(self.mean_activity)
@@ -84,7 +84,7 @@ class Neuron(object):
         Get the mean activity of the neuron across all trials
         :return: an np array with the mean activity
         """
-        assert self.aligned_activity != []
+        assert len(self.aligned_activity) > 0
         if self.mean_activity == []:
             self.mean_activity = np.mean(self.aligned_activity, axis=0)
             self.stderr_activity = np.std(self.aligned_activity, axis=0) / np.sqrt(self.ntrials)
@@ -97,7 +97,7 @@ class Neuron(object):
         Get the mean activity of left and right trials, separately
         :return: nothing
         """
-        assert self.aligned_activity != []
+        assert len(self.aligned_activity) > 0
 
         # Get mean of left trials
         trials_left = self.exp.l_trials
