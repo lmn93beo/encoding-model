@@ -1,4 +1,4 @@
-function [trials_dff, trials_z_dff, dff, z_dff, ix, ixCue] = getTrials_tb(options) 
+function [trials_dff, trials_z_dff, dff, z_dff, frametime, ix, ixCue] = getTrials_tb(options) 
 %ONLY FOR PROTOCOL FILES GENERATED WITH TRACKBALL_BEHAVIOR SCRIPT
 
 %% Load options
