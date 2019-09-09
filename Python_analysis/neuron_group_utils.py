@@ -92,7 +92,7 @@ class NeuronGroup(object):
         subgroup = NeuronGroup(subneurons)
         return subgroup
 
-    def plot_all_means(self, plotid=None, normalize=False, sort=False, style='lines', side='both'):
+    def plot_all_means(self, plotid=None, normalize=False, sort=False, style='lines', side='both', color='b'):
         """
         Plot the mean activity of all neurons
         :param plotid array of cells to plot
@@ -136,10 +136,9 @@ class NeuronGroup(object):
 
         print('Number to plot:', mean_activities.shape)
         # Subplot 1: plot the mean activities
-        plt.figure()
-        plt.subplot('211')
+        plt.subplot('311')
         if style == 'lines':
-            plt.plot(mean_activities.T)
+            plt.plot(mean_activities.T, color=color, alpha=0.2)
         elif style == 'heatmap':
             if normalize:
                 plt.imshow(mean_activities, cmap='bwr', aspect='auto', vmin=-1, vmax=1)
@@ -148,11 +147,32 @@ class NeuronGroup(object):
         else:
             raise ValueError('Invalid style')
 
-        # Subplot 2: plot histograms
-        plt.subplot('212')
+        # Subplot 2: plot mean over all neurons
+        plt.subplot('312')
+        plt.plot(np.mean(mean_activities, axis=0), color=color)
+
+        # Subplot 3: plot histograms
+        plt.subplot('313')
         self.collect_tmax(True)
 
         return mean_activities
+
+    def plot_example_neurons(self, id_list=None):
+        """
+        Plot the activity of the neurons specified in id_list, from neuron_group
+        :param neuron_group: a NeuronGroup object
+        :param id_list: a list of neurons to plot
+        :return: nothing
+        """
+        if id_list == None:
+            id_list = np.arange(self.n_neurons)
+        dimx = int(np.sqrt(len(id_list)))
+        dimy = int(len(id_list) / dimx) + 1
+        for id, i in enumerate(id_list):
+            plt.subplot(dimx, dimy, id + 1)
+            neuron = self.neurons[i]
+            plt.errorbar(np.arange(len(neuron.mean_activity)), neuron.mean_activity, neuron.stderr_activity)
+            plt.title(str(i))
 
 
 """

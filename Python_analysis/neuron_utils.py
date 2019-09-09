@@ -54,7 +54,13 @@ class Neuron(object):
         arr = []
         for i in range(self.ntrials):
             startT = tpoints[i]
-            single_trial = self.activity[i][startT + window[0] - 1 : startT + window[1]]
+
+            # Handle case where window falls out of trial
+            if startT + window[0] - 1 < 0 or startT + window[1] > len(self.activity[i]):
+                print('Warning: trial %d alignment window falls outside of trial\n' % i)
+                single_trial = np.full(window[1] - window[0] + 1, np.nan)
+            else:
+                single_trial = self.activity[i][startT + window[0] - 1 : startT + window[1]]
             arr.append(single_trial)
         self.aligned_activity = np.array(arr)
         return np.array(arr)
@@ -71,7 +77,7 @@ class Neuron(object):
         #self.get_mean_activity_sides()
         t_max_activity = np.argmax(self.mean_activity)
         self.t_max_activity = t_max_activity
-        if t_max_activity < 10:
+        if t_max_activity < 8:
             self.neuron_class = 0
         elif t_max_activity < 16:
             self.neuron_class = 1
@@ -86,8 +92,8 @@ class Neuron(object):
         """
         assert len(self.aligned_activity) > 0
         if self.mean_activity == []:
-            self.mean_activity = np.mean(self.aligned_activity, axis=0)
-            self.stderr_activity = np.std(self.aligned_activity, axis=0) / np.sqrt(self.ntrials)
+            self.mean_activity = np.nanmean(self.aligned_activity, axis=0)
+            self.stderr_activity = np.nanstd(self.aligned_activity, axis=0) / np.sqrt(self.ntrials)
         else:
             print('Warning: mean_activity already computed, recomputing...')
         return self.mean_activity
@@ -131,7 +137,9 @@ class Neuron(object):
         :param trials: a list of trials to subsample
         :return: a Neuron object
         """
-        neuron = Neuron(self.id, self.activity[trials], self.exp)
+        assert len(self.aligned_activity) > 0
+        selected_trials = [self.activity[i] for i in trials]
+        neuron = Neuron(self.id, selected_trials, self.exp)
         neuron.aligned_activity = self.aligned_activity[trials]
         neuron.classify()
 
