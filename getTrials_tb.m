@@ -9,16 +9,22 @@ neuropil_subt = options.neuropil_subt; %set true if want to subtract neuropil fr
 dt = options.dt; %time window for chunking trials
 
 %% Load Fluoresence data, subtract neuropil if specified, make f into DFF
-cd(f_folder_name);
-f = importdata('F_wNeuropil_partial_tb41_03032017.txt');
-f = f.data(:,2:end)';
-if neuropil & neuropil_subt
-    neuropil_f = f(2:2:end,:);
-    raw_f = f(1:2:end,:) - 0.7*neuropil_subt; %%
-elseif neuropil
-    raw_f = f(1:2:end,:);
+if ~options.suite2p
+    f = importdata(options.f_file_name);
+    f = f.data(:,2:end)';
+    if neuropil & neuropil_subt
+        neuropil_f = f(2:2:end,:);
+        raw_f = f(1:2:end,:) - 0.7*neuropil_subt; %%
+    elseif neuropil
+        raw_f = f(1:2:end,:);
+    else
+        raw_f = f;
+    end
 else
-    raw_f = f;
+    load([f_folder_name '\Fall.mat'], 'F', 'Fneu', 'iscell');
+
+    raw_f = F - Fneu * 0.7;
+    raw_f = raw_f(logical(iscell(:,1)), :);
 end
 
 for c = 1:size(raw_f,1)
