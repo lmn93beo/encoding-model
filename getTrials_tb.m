@@ -36,12 +36,13 @@ for c = 1:size(raw_f,1)
 end
 
 %% Load Prairie XML file to get exact frame times
-cfgfiles = [dir('*.xml')];
+cfgfiles = [dir([options.f_folder_name '\*.xml'])];
 if isempty(cfgfiles)
     disp('Could not find config file, using default framerate')
     keyboard
 else
-    raw_xml = fileread(cfgfiles.name);
+    assert(numel(cfgfiles) == 1);
+    raw_xml = fileread([options.f_folder_name '\' cfgfiles.name]);
 end
 
 sep = strfind(raw_xml,'<Frame relativeTime');
