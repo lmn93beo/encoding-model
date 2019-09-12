@@ -30,10 +30,13 @@ class NeuronGroup(object):
 
         # Find mean activities for all neurons in group
         mean_activities = []
+        stderr_activities = []
         for neuron in self.neurons:
             assert len(neuron.mean_activity) > 0
             mean_activities.append(neuron.mean_activity)
+            stderr_activities.append(neuron.stderr_activity)
         self.mean_activities = np.array(mean_activities)
+        self.stderr_activities = np.array(stderr_activities)
 
     def align_all(self, tpoints, window):
         """
@@ -120,7 +123,7 @@ class NeuronGroup(object):
 
         # Subtract the baseline of first 5 frames
         baseline = np.mean(mean_activities[:, 0:5], axis=1)
-        mean_activities = (mean_activities.T - baseline).T
+        #mean_activities = (mean_activities.T - baseline).T
 
 
         # Normalize
@@ -173,7 +176,6 @@ class NeuronGroup(object):
             neuron = self.neurons[i]
             plt.errorbar(np.arange(len(neuron.mean_activity)), neuron.mean_activity, neuron.stderr_activity)
             plt.title(str(i))
-
 
 """
 Some useful functions for working with groups

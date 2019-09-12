@@ -1,0 +1,7 @@
+Notes for analysis:
+* Some edge cases:
+- When window for alignment is out of range (falls out of trial), what to do?
+    - Option: ignore that trial
+    - Option 2: Take up to whatever is allowed, and pad with zeros (can introduce artefacts..)
+    - Option 3: Fill whole trial with nan (will do this)
+    - Option 4: Like option 2, but pad with nan's
