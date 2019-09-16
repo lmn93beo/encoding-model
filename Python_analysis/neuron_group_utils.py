@@ -95,7 +95,7 @@ class NeuronGroup(object):
         subgroup = NeuronGroup(subneurons)
         return subgroup
 
-    def plot_all_means(self, plotid=None, normalize=False, sort=False, style='lines', side='both', color='b'):
+    def plot_all_means(self, tvals=None, plotid=None, normalize=False, sort=False, style='lines', side='both', color='b'):
         """
         Plot the mean activity of all neurons
         :param plotid array of cells to plot
@@ -141,7 +141,10 @@ class NeuronGroup(object):
         # Subplot 1: plot the mean activities
         plt.subplot('311')
         if style == 'lines':
-            plt.plot(mean_activities.T, color=color, alpha=0.2)
+            if tvals is not None:
+                plt.plot(tvals, mean_activities.T, color=color, alpha=0.2)
+            else:
+                plt.plot(mean_activities.T, color=color, alpha=0.2)
         elif style == 'heatmap':
             if normalize:
                 plt.imshow(mean_activities, cmap='bwr', aspect='auto', vmin=-1, vmax=1)
@@ -198,7 +201,7 @@ def make_neuron_obj(rawdata, field, cellid, exp):
     neuron = neuron_utils.Neuron(cellid, neuron_activity, exp)
     return neuron
 
-def make_neuron_list(rawdata, field, cell_lst, exp):
+def make_neuron_list(rawdata, field, cell_lst=None, exp=None):
     """
     Create a list of neurons from raw data
     :param rawdata: raw data returned by mat4py.loadmat
@@ -208,6 +211,13 @@ def make_neuron_list(rawdata, field, cell_lst, exp):
     :return: a list of neuron objects
     """
     neurons = []
+
+    # Find out how many neurons there are
+    trial_activity = utils.get_struct_field_mat4py(rawdata, 'neural_act_mat', True, 0)
+    n_neurons = trial_activity.shape[1]
+    if cell_lst is None:
+        cell_lst = np.arange(n_neurons)
+
     for cellid in cell_lst:
         print('Making neuron # ', cellid, '...')
         neuron = make_neuron_obj(rawdata, field, cellid, exp)

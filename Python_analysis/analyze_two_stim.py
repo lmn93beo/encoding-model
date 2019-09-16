@@ -7,10 +7,22 @@ import mat4py
 import neuron_group_utils
 import neuron_utils
 
+
+samp_rate = 12.2 #Hz, 12.2 for TB146 and 5 Hz for TB41
+
 # Load data
-raw_behavior_summary = mat4py.loadmat('TB146_behavior_summary.mat')
-raw_encoding_struct = mat4py.loadmat('TB146_encoding_structs.mat')
-epochs = mat4py.loadmat('TB146_epochs.mat')
+date = '20190801'
+summary_fname = 'TB146_' + date + '_behavior_summary.mat'
+encoding_fname = 'TB146_' + date + '_encoding_structs.mat'
+epoch_fname = 'TB146_' + date + '_epochs.mat'
+
+summary_fname = 'TB41_behavior_summary.mat'
+encoding_fname = 'TB41_encoding_structs.mat'
+epoch_fname = 'TB41_epochs.mat'
+
+raw_behavior_summary = mat4py.loadmat(summary_fname)
+raw_encoding_struct = mat4py.loadmat(encoding_fname)
+epochs = mat4py.loadmat(epoch_fname)
 
 # Extract structures from the raw data
 one, two, three, four, correct, incorrect, left, right, prev_corr, prev_incorr = \
@@ -40,13 +52,13 @@ exp_dict = dict(l_trials=left, r_trials=right, one_diff=one, two_diff=two, three
 exp = neuron_utils.Experiment(exp_dict)
 
 # Make a neuron group
-neurons = neuron_group_utils.make_neuron_list(raw_encoding_struct, 'neural_act_mat', np.arange(76), exp)
+neurons = neuron_group_utils.make_neuron_list(raw_encoding_struct, 'neural_act_mat', exp=exp)
+xrange = [-14, 50]
 
 for neuron in neurons:
-    neuron.align_activity(stim_onset_per_trial, [-5, 18])
+    neuron.align_activity(stim_onset_per_trial, xrange)
 neuron_group = neuron_group_utils.NeuronGroup(neurons)
-
-
+neuron_group.plot_all_means(tvals=np.arange(xrange[0], xrange[1] + 1))
 
 # Make subgroup based on class
 class0 = np.where(neuron_group.classes == 0)[0]
@@ -98,4 +110,3 @@ for i in range(86):
     plt.plot(dprime[i, :])
     plt.ylim(-1, 1)
     plt.plot([5, 5], [-1, 1], '--')
-

@@ -77,9 +77,9 @@ class Neuron(object):
         #self.get_mean_activity_sides()
         t_max_activity = np.argmax(self.mean_activity)
         self.t_max_activity = t_max_activity
-        if t_max_activity < 8:
+        if t_max_activity < 10:
             self.neuron_class = 0
-        elif t_max_activity < 16:
+        elif t_max_activity < 32:
             self.neuron_class = 1
         else:
             self.neuron_class = 2
