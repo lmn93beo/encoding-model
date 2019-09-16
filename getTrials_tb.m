@@ -46,13 +46,16 @@ else
 end
 
 sep = strfind(raw_xml,'<Frame relativeTime');
-frameNum = numel(sep);
+frameNum = numel(sep); % MANUAL! WILL CHANGE
 for i = 1:frameNum
     curr_idx = strfind(raw_xml(sep(i):sep(i)+100),'"');
     toGet = sep(i)+curr_idx(1);
     if i == 1 %because first entry for "relativetime" is 0
         frametime(i) = str2num(raw_xml(1,toGet));
     else
+        if i == 15000
+            disp(i);
+        end
         frametime(i) = str2num(raw_xml(1,toGet:toGet+8));
     end
 end

@@ -1,0 +1,18 @@
+Convention:
+- stim and choice: 2 means right, 1 means left
+
+Behavioral logs:
+- data.response:
+	(MATLAB times)
+	- earlyCueTime: when cue is played
+	- trialstart: when trial starts (stim is presented)
+	- timePC: (struct of time from trialstart to decision time (choice != 0),
+		time is relative to trialstart)
+	- rewardtimes: reward is given (delay to reward determined by data.params.rwdDeliveryDelay)
+	- trialtime: end of trial
+
+	(Arduino times, look at data.response.time and data.response.dx)
+	- precue_samples_start: when cue is played ~ earlyCueTime
+	- samples_start: when trial starts ~ trialstart
+	- samples_stop: when trial ends (decision time (choice != 0)) ~ timePC
+	- samples_reward: reward is given ~ trialtime (MATLAB)

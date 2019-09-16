@@ -187,7 +187,10 @@ all_pw = cell2mat(apw);
 
  plot(all_left)
  
+ 
  %% Save the relevant variables
- save('TB41_behavior_summary.mat', 'prev_right', 'prev_wrong', 'left', 'right',...
-     'correct', 'incorrect', 'stim_onset_per_trial', 'one', 'two', 'three', 'four');
+ reward_onset_per_trial = reward_onset_per_trial';
+ save('TB41_behavior_summary_090519.mat', 'prev_right', 'prev_wrong', 'left', 'right',...
+     'correct', 'incorrect', 'stim_onset_per_trial', 'one', 'two', 'three', 'four',...
+     'reward_onset_per_trial');
  
