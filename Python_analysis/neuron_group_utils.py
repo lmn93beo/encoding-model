@@ -69,9 +69,11 @@ class NeuronGroup(object):
             assert neuron.t_max_activity > -1
             tmax_lst.append(neuron.t_max_activity)
 
+        tmax_arr = (np.array(tmax_lst) + self.exp.window[0]) / self.exp.rate
+
         if plot_hist:
-            plt.hist(tmax_lst)
-        return np.array(tmax_lst)
+            plt.hist(tmax_arr)
+        return np.array(tmax_arr)
 
     def make_subgroup_by_neurons(self, neurons):
         """
@@ -142,7 +144,7 @@ class NeuronGroup(object):
         plt.subplot('311')
         if style == 'lines':
             if tvals is not None:
-                plt.plot(tvals, mean_activities.T, color=color, alpha=0.2)
+                plt.plot(tvals / self.exp.rate, mean_activities.T, color=color, alpha=0.2)
             else:
                 plt.plot(mean_activities.T, color=color, alpha=0.2)
         elif style == 'heatmap':
@@ -155,7 +157,7 @@ class NeuronGroup(object):
 
         # Subplot 2: plot mean over all neurons
         plt.subplot('312')
-        plt.plot(np.mean(mean_activities, axis=0), color=color)
+        plt.plot(tvals / self.exp.rate, np.mean(mean_activities, axis=0), color=color)
 
         # Subplot 3: plot histograms
         plt.subplot('313')

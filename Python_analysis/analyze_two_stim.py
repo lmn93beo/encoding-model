@@ -8,17 +8,21 @@ import neuron_group_utils
 import neuron_utils
 
 
-samp_rate = 12.2 #Hz, 12.2 for TB146 and 5 Hz for TB41
+animal = 'TB146'
 
-# Load data
-date = '20190801'
-summary_fname = 'TB146_' + date + '_behavior_summary.mat'
-encoding_fname = 'TB146_' + date + '_encoding_structs.mat'
-epoch_fname = 'TB146_' + date + '_epochs.mat'
-
-summary_fname = 'TB41_behavior_summary.mat'
-encoding_fname = 'TB41_encoding_structs.mat'
-epoch_fname = 'TB41_epochs.mat'
+if animal == 'TB146':
+    samp_rate = 12.2 #Hz, 12.2 for TB146 and 5 Hz for TB41
+    date = '20190807'
+    window = [-10, 32]
+    summary_fname = animal + '_' + date + '_behavior_summary.mat'
+    encoding_fname = animal + '_' + date + '_encoding_structs.mat'
+    epoch_fname = animal + '_' + date + '_epochs.mat'
+elif animal == 'TB41':
+    samp_rate = 5
+    window = [-5, 16]
+    summary_fname = 'TB41_behavior_summary.mat'
+    encoding_fname = 'TB41_encoding_structs.mat'
+    epoch_fname = 'TB41_epochs.mat'
 
 raw_behavior_summary = mat4py.loadmat(summary_fname)
 raw_encoding_struct = mat4py.loadmat(encoding_fname)
@@ -48,17 +52,16 @@ neural_matmat, predall_matmat = \
 # Make an experiment object to capture the experiment
 exp_dict = dict(l_trials=left, r_trials=right, one_diff=one, two_diff=two, three_diff=three,
                 four_diff=four, correct=correct, incorrect=incorrect, prev_corr=prev_corr,
-                prev_incorr=prev_incorr)
+                prev_incorr=prev_incorr, rate=samp_rate, window=window)
 exp = neuron_utils.Experiment(exp_dict)
 
 # Make a neuron group
 neurons = neuron_group_utils.make_neuron_list(raw_encoding_struct, 'neural_act_mat', exp=exp)
-xrange = [-14, 50]
 
 for neuron in neurons:
-    neuron.align_activity(stim_onset_per_trial, xrange)
+    neuron.align_activity(stim_onset_per_trial)
 neuron_group = neuron_group_utils.NeuronGroup(neurons)
-neuron_group.plot_all_means(tvals=np.arange(xrange[0], xrange[1] + 1))
+#neuron_group.plot_all_means(tvals=np.arange(window[0], window[1] + 1))
 
 # Make subgroup based on class
 class0 = np.where(neuron_group.classes == 0)[0]
@@ -70,9 +73,9 @@ class2_group = neuron_group.make_subgroup_by_neurons(class2)
 
 # Plot activity for each group
 plt.figure()
-class0_group.plot_all_means(color='b')
-class1_group.plot_all_means(color='r')
-class2_group.plot_all_means(color='g')
+class0_group.plot_all_means(color='b', tvals=np.arange(window[0], window[1] + 1))
+class1_group.plot_all_means(color='r', tvals=np.arange(window[0], window[1] + 1))
+class2_group.plot_all_means(color='g', tvals=np.arange(window[0], window[1] + 1))
 
 # Compare reward and non-reward
 class0_group_corr = class0_group.make_subgroup_by_trials(left)
@@ -103,6 +106,7 @@ left_stdev = left_stderr * np.sqrt(class1_group_corr.neurons[0].ntrials)
 right_stderr = class1_group_incorr.stderr_activities
 right_stdev = right_stderr * np.sqrt(class1_group_incorr.neurons[0].ntrials)
 
+'''
 dprime = (left_mean_act - right_mean_act) / np.sqrt(0.5 * (left_stdev ** 2 + right_stdev ** 2))
 plt.figure()
 for i in range(86):
@@ -110,3 +114,4 @@ for i in range(86):
     plt.plot(dprime[i, :])
     plt.ylim(-1, 1)
     plt.plot([5, 5], [-1, 1], '--')
+'''

@@ -44,7 +44,7 @@ class Neuron(object):
             plt.imshow(extracted_trials, cmap='bwr')
 
 
-    def align_activity(self, tpoints, window):
+    def align_activity(self, tpoints):
         """
         Align neural activity to time points specified in tpoints
         :param tpoints: time points to align to (one-indexed)
@@ -52,6 +52,7 @@ class Neuron(object):
         :return: an np array of size ntrials x T corresponding to aligned activity
         """
         arr = []
+        window = self.exp.window
         for i in range(self.ntrials):
             startT = tpoints[i]
 
@@ -77,9 +78,13 @@ class Neuron(object):
         #self.get_mean_activity_sides()
         t_max_activity = np.argmax(self.mean_activity)
         self.t_max_activity = t_max_activity
-        if t_max_activity < 10:
+
+        # Class 0: before 1.6 s, class 1: 1.6-3s, class 2: after 3s
+        BORDER1 = 0.6
+        BORDER2 = 2.0
+        if t_max_activity + self.exp.window[0] < BORDER1 * self.exp.rate:
             self.neuron_class = 0
-        elif t_max_activity < 32:
+        elif t_max_activity + self.exp.window[0] < BORDER2 * self.exp.rate:
             self.neuron_class = 1
         else:
             self.neuron_class = 2
@@ -183,6 +188,8 @@ class Experiment(object):
         self.r_trials = exp_dict['r_trials']
         self.ntrials = len(self.l_trials) + len(self.r_trials)
         self.exp_dict = exp_dict
+        self.rate = exp_dict['rate']
+        self.window = exp_dict['window']
 
 def combine_neurons(neuron1, neuron2):
     """
