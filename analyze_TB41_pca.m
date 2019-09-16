@@ -1,45 +1,15 @@
 options.f_folder_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model';
-options.b_file_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model/behavior_file_TB41.mat';
-options.f_file_name = 'F_wNeuropil_partial_tb41_03032017.txt';
+options.b_file_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model\behavior_file_TB41.mat';
 
 options.neuropil = 1;
 options.neuropil_subt = 1;
 options.dt = [-3 5];
-options.suite2p = 0;
 
-[trials_dff, trials_z_dff, dff, z_dff, frametimes, ix, ixCue] = getTrials_tb(options);
+[trials_dff, trials_z_dff, dff, z_dff, ix, ixCue] = getTrials_tb(options);
 ncells = size(z_dff, 1);
 
-% High-pass filter
-fprintf('Doing high pass filter...\n');
-for i = 1:ncells
-    original = z_dff(i,:);
-    filtered = highpass(original, 0.1, 5);
-    env = abs(hilbert(filtered));
-    env = lowpass(env, 0.001, 5);
-    z_dff(i,:) = filtered ./ env;
-end
-
-%% Envelope normalization
-% ncell = 1;
-% original = z_dff(ncell,:);
-% env = abs(hilbert(original));
-% % Low-pass filter
-% %env = medfilt1(env, 100);
-% env = lowpass(env, 0.001, 5);
-% figure;
-% plot(original);
-% hold on;
-% plot(env)
-% %plot(original ./ env);
-% figure;
-% plot(original ./ env);
-
-
-
-
 %% Visualize
-imagesc(z_dff);
+imagesc(dff);
 %plot(dff(1,:));
 hold on;
 for i = 1:numel(ix)
@@ -47,9 +17,41 @@ for i = 1:numel(ix)
    plot([ixCue(i) ixCue(i)], [-100 700], 'r');
 end
 
+%% Do a PCA on the neurons
+% Find correlation matrix
+demean = dff - mean(dff, 2); 
+corr = demean * demean'; 
+% SVD
+[U, S, V] = svd(corr);
+
+varexp = cumsum(diag(S));
+varexp = varexp ./ sum(diag(S));
+%stem(varexp)
+
+% Project
+pcs = U(:,1:3);
+pcs_proj = demean' * pcs;
+
+y1 = highpass(pcs_proj(:,1), 0.04, 5);
+y2 = highpass(pcs_proj(:,2), 0.04, 5);
+y3 = highpass(pcs_proj(:,3), 0.04, 5);
+
+% Visualize first 3 pcs
+figure;
+plot(y1);
+hold on;
+plot(y2);
+plot(y3);
+
+for i = 1:numel(ix)
+   plot([ix(i) ix(i)], [-700 700], 'b');
+   plot([ixCue(i) ixCue(i)], [-700 700], 'r');
+end
+
+
 %% Load and preprocess behavior file
 load behavior_file_TB41.mat
-%1 = 1, r = 2 stim location
+%1 = r, 2 = l stim location
 
 ntrials = sum(ix < 9000);
 choice = data.response.choice(1:ntrials);
@@ -92,7 +94,132 @@ ball_precueT = data.response.time(precueS);
 ball_startT = data.response.time(startS);
 ball_rewardT = data.response.time(rewardS);
 
+%% Align on trialStart
+pc_trials = {};
+figure;
+hold on;
+nplot = 10;
+ixValid = ix(ix < 9000-50);
+pcs_filt = [y1 y2 y3];
+ctrL = 1;
+ctrR = 1;
+ctr_rew = 1;
+ctr_norew = 1;
+ctr1 = 1;
+ctr2 = 1;
+ctr3 = 1;
+ctr4 = 1;
+ctr5 = 1;
 
+pc_stim1 = {};
+pc_stim2 = {};
+pc_stim3 = {};
+pc_stim4 = {};
+pc_stim5 = {};
+
+for i = 1:numel(ixValid)
+    pc_trials{i} = pcs_filt(ix(i) - 10 : ix(i) + 10, :);
+    if rstim(i) == 0
+        pc_stim1{ctr1} = pcs_filt(ix(i) - 10 : ix(i) + 10, :);
+        ctr1 = ctr1 + 1;
+        %plot3(y1(ix(i)-20 : ix(i) + 30), y2(ix(i)-20 : ix(i) + 30), y3(ix(i)-20 : ix(i) + 30), 'b');
+    elseif rstim(i) == 0.04
+        pc_stim2{ctr2} = pcs_filt(ix(i) - 10 : ix(i) + 10, :);
+        ctr2 = ctr2 + 1;
+        %plot3(y1(ix(i)-20 : ix(i) + 30), y2(ix(i)-20 : ix(i) + 30), y3(ix(i)-20 : ix(i) + 30), 'r');
+    elseif rstim(i) == 0.08
+        pc_stim3{ctr3} = pcs_filt(ix(i) - 10 : ix(i) + 10, :);
+        ctr3 = ctr3 + 1;
+        
+    elseif rstim(i) == 0.32
+        pc_stim4{ctr4} = pcs_filt(ix(i) - 10 : ix(i) + 10, :);
+        ctr4 = ctr4 + 1;
+        
+    elseif rstim(i) == 0.64
+        pc_stim5{ctr5} = pcs_filt(ix(i) - 10 : ix(i) + 10, :);
+        ctr5 = ctr5 + 1;
+        
+        
+        %plot3(y1(ix(i)-20 : ix(i) + 30), y2(ix(i)-20 : ix(i) + 30), y3(ix(i)-20 : ix(i) + 30), 'k');
+    end
+    
+    if data.response.reward(i) > 0
+        pc_reward{ctr_rew} = pcs_filt(ix(i) - 10 : ix(i) + 10, :);
+        ctr_rew = ctr_rew + 1;
+    else
+        pc_noreward{ctr_norew} = pcs_filt(ix(i) - 10 : ix(i) + 10, :);
+        ctr_norew = ctr_norew + 1;
+    end
+end
+plot3(y1(ix(1:nplot)), y2(ix(1:nplot)), y3(ix(1:nplot)), 'ro')
+
+%% Plot
+figure;
+[pc1_arrR, pc2_arrR, pc3_arrR] = make_combined_arr(pc_trialsR);
+[pc1_arrL, pc2_arrL, pc3_arrL] = make_combined_arr(pc_trialsL);
+[pc1_reward, pc2_reward, pc3_reward] = make_combined_arr(pc_reward);
+[pc1_noreward, pc2_noreward, pc3_noreward] = make_combined_arr(pc_noreward);
+[pc1_arr1, pc2_arr1, pc3_arr1] = make_combined_arr(pc_stim1);
+[pc1_arr2, pc2_arr2, pc3_arr2] = make_combined_arr(pc_stim2);
+[pc1_arr3, pc2_arr3, pc3_arr3] = make_combined_arr(pc_stim3);
+[pc1_arr4, pc2_arr4, pc3_arr4] = make_combined_arr(pc_stim4);
+[pc1_arr5, pc2_arr5, pc3_arr5] = make_combined_arr(pc_stim5);
+
+
+subplot(3,2,1);
+taxis = ((1:21) - 10) / 5;
+plot(taxis, pc1_arrR, 'Color', [0 0 1 0.2]);
+hold on;
+plot(taxis, pc1_arrL, 'Color', [1 0 0 0.2]);
+%plot(taxis, mean(pc1_arrR'), 'r');
+vline(0, 'k--');
+title('PC1, right choices aligned on trial onset');
+ylim([-600 600])
+
+subplot(3,2,2)
+errorbar(taxis, mean(pc1_arr1'), std(pc1_arr1')/sqrt(size(pc1_arr1, 2)), 'b')
+hold on;
+errorbar(taxis, mean(pc1_arr2'), std(pc1_arr2')/sqrt(size(pc1_arr2, 2)), 'r')
+errorbar(taxis, mean(pc1_arr3'), std(pc1_arr3')/sqrt(size(pc1_arr3, 2)), 'k')
+errorbar(taxis, mean(pc1_arr4'), std(pc1_arr4')/sqrt(size(pc1_arr4, 2)), 'g')
+errorbar(taxis, mean(pc1_arr5'), std(pc1_arr5')/sqrt(size(pc1_arr5, 2)), 'b')
+legend({'Right choice', 'Left choice'});
+ylim([-600 600])
+vline(0, 'k--');
+
+subplot(3,2,3);
+plot(taxis, pc2_arrR, 'Color', [0 0 1 0.2]);
+hold on;
+plot(taxis, pc2_arrL, 'Color', [1 0 0 0.2]);
+%plot(taxis, mean(pc1_arrR'), 'r');
+title('PC2');
+ylim([-600 600])
+vline(0, 'k--');
+
+subplot(3,2,4)
+errorbar(taxis, mean(pc2_arrR'), std(pc2_arrR')/sqrt(size(pc2_arrR, 2)), 'b')
+hold on;
+errorbar(taxis, mean(pc2_arrL'), std(pc2_arrL')/sqrt(size(pc2_arrL, 2)), 'r')
+ylim([-600 600])
+vline(0, 'k--');
+
+subplot(3,2,5);
+plot(taxis, pc3_arrR, 'Color', [0 0 1 0.2]);
+hold on;
+plot(taxis, pc3_arrL, 'Color', [1 0 0 0.2]);
+%plot(taxis, mean(pc1_arrR'), 'r');
+title('PC3');
+ylim([-600 600])
+vline(0, 'k--');
+
+subplot(3,2,6)
+errorbar(taxis, mean(pc3_arrR'), std(pc3_arrR')/sqrt(size(pc3_arrR, 2)), 'b')
+hold on;
+errorbar(taxis, mean(pc3_arrL'), std(pc3_arrL')/sqrt(size(pc3_arrL, 2)), 'r')
+ylim([-600 600])
+vline(0, 'k--');
+
+%set(h2b.Edge, 'ColorBinding','interpolated', 'ColorData',cd)
 %%
 % Subsample the trials with opp_contrast == 0.32 and choice ~= 5
 goodtrials = (choice(2:end) ~= 5) & (choice(1:end-1) ~= 5);
@@ -244,21 +371,12 @@ difficultyGood = difficulty(goodtrialsID);
  
 
 %% Make the predictor matrix
-pred_types_cell = {'event', 'event', 'event', 'event', 'continuous'};
-base_vars = {cue_onsetCells, left_onsetCells, right_onsetCells,...
-     rewardsCell, balldata};
-spline_filename = 'Splines/spline_basis_9_order5_30pts.mat';
+pred_types_cell = {'event', 'event', 'event', 'event', 'whole-trial', 'whole-trial', 'whole-trial', 'continuous'};
+groupings = {1, 2, 3, 4, 5, 6, 7, 8};
 
-[pred_allmat,pred_inds_cell,grouped_var_types] = make_predictor_matrix_generalcase(base_vars, pred_types_cell, spline_filename);
-
-% csvwrite('cue_onset.csv', cue_onsetCells)
-% csvwrite('left_onset.csv', left_onsetCells)
-% csvwrite('right_onset.csv', right_onsetCells)
-% csvwrite('rewards.csv', rewardsCell)
-% csvwrite('choices.csv', choiceGood)
-% csvwrite('previous_choices.csv', prevchoice)
-% csvwrite('difficulty.csv', difficultyGood)
-% csvwrite('movement.csv', balldata)
+[pred_allmat,pred_inds_cell,grouped_var_types] = make_predictor_matrix_generalcase({cue_onsetCells, left_onsetCells, right_onsetCells,...
+     rewardsCell, choiceGood, prevchoice, difficultyGood, balldata}, ...
+    pred_types_cell, groupings);
 
 %% Make the neural matrix (response)
 % Make the activity matrix
@@ -273,16 +391,13 @@ end
 neural_matmat = cell2mat(neural_act_mat);
 predall_matmat = cell2mat(pred_allmat);
 
-% save('TB41_encoding_structs.mat', 'neural_matmat', 'predall_matmat', 'neural_act_mat',...
-%     'pred_allmat', 'left_onsetCells', 'right_onsetCells', 'rewardsCell');
-% figure;
-% cellID = 1;
-% plot(neural_matmat(:,cellID));
-% hold on;
-% 
-% % Low-pass filter
-% filtered = highpass(neural_matmat(:,cellID), 0.1, 5);
-% plot(filtered)
+figure;
+cellID = 1;
+plot(neural_matmat(:,cellID));
+hold on;
+for i = 1:180
+    plot([i * 41, i * 41], [-2 10], '--');
+end
 
 %% Do encoding model
 approach = 'norefit';
@@ -290,26 +405,7 @@ approach = 'norefit';
 %pred_types_cell_group = {'event', 'whole-trial', 'whole-trial', 'whole-trial', 'continuous'};
 disp('Fitting encoding model...')
 [relative_contrib,~,r2val] = process_encoding_model(pred_allmat, pred_inds_cell, neural_act_mat, pred_types_cell,approach);
-fprintf('Mean R^2 value = %.2f%% \n', mean(r2val) * 100);
 
-% csvwrite('neural_activity.csv', neural_act_mat);
-%parameter breakdown
-%process_encoding_model is our function
-
-% arguments: pred_allmat      - (our x value!) cell array correspoding to a matrix of behavioral predictors, each term is a trial and contains a matrix where rows are timepoints and columns are behavioral predictors.
-%            pred_inds_cell   - cell array where each term has a vector of indices of the predictors that belong to a specific behavioral variable
-%            neural_act_mat   - (our y value!) cell array correspoding to a matrix of activity traces, each term is a trial and contains a matrix where rows are timepoints and columns are traces correspoding to different
-%                               neurons. Timepoints where the neuronal activity is not defined (e.g. a the imaging became unstable) are filled with NaNs (Currently it is assumed that before the first NaN
-%                               activity was always defined, and after the first NaN activity is never defined).
-%            pred_types_cell  - cell array where each terms indicates the type of behavioral variable ('event', 'whole-trial', or 'continuous').
-%            approach         - 'norefit': calculate regression weights with the full model, then zero the weights correspoding to the predictors being dropped. 'refit' : calculate regression weights
-%                               without the weights correspoding to the predictors being dropped (partial model).
-%
-% outputs:   relative_contrib - a matrix where rows are behavioral variables and columns are neurons. each term is the relative contribution of the behavioral variable to the neural activity.
-%            Fstat_mat        - a matrix where rows are behavioral variables and columns are neurons. each term is the F-statistic associated with the nested model comparison where the predicted variable is the
-%                               activity of the neuron, the full model is the model containing the predictors from al behavioral variables, and the partial model is the model containing the predictors from all
-%                               variables except the one being tested. The value of this statistic shoudl be compared to a distirbution of statistic values obtained by erforing the same oprateion on shuffled 
-%                               data, directly using the p-value assocaited with the staitstic is not valid given the autocorrelations in the data
 %% Visualize
 means = nanmean(relative_contrib, 1);
 stds = nanstd(relative_contrib, 1) / sqrt(size(relative_contrib, 1));
@@ -327,5 +423,14 @@ ylabel('Relative Contribution');
 xticklabels(factors);
 set(gca, 'FontSize', 16);
 
-%csvwrite('relative_contributions_raw.csv',relative_contrib)
+
+function [pc1arr, pc2arr, pc3arr] = make_combined_arr(raw_arr)
+
+for i = 1:length(raw_arr)
+    pc1arr(:,i) = raw_arr{i}(:,1);
+    pc2arr(:,i) = raw_arr{i}(:,2);
+    pc3arr(:,i) = raw_arr{i}(:,3);
+end
+
+end
 

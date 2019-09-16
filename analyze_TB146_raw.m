@@ -1,43 +1,31 @@
-options.f_folder_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\Physiology_analysis\146\20190807\suite2p\plane0';
-options.b_file_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model/20190807_trackball_0146.mat';
-save_filename = 'TB146_encoding_structs.mat';
-options.f_file_name = 'F_wNeuropil_partial_tb41_03032017.txt';
+clear all
+close all
+
+options.f_folder_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\Physiology_analysis\146\20190802\suite2p\plane0';
+options.b_file_name = 'C:\Users\Sur lab\Dropbox (MIT)\Nhat\mouse 0146/20190802_trackball_0146.mat';
+root_filename = 'TB146_20190802';
+encoding_struct_fname = [root_filename '_encoding_structs'];
+behavior_summary_fname = [root_filename '_behavior_summary'];
+epoch_filename = [root_filename '_epochs'];
+savefile = 1;
 
 options.neuropil = 1;
 options.neuropil_subt = 1;
 options.dt = [-3 5];
 options.suite2p = 1;
 
-[trials_dff, trials_z_dff, dff, z_dff, frametimes, ix, ixCue] = getTrials_tb(options);
+[trials_dff, trials_z_dff, dff, z_dff, frametime, ix, ixCue] = getTrials_tb(options);
 ncells = size(z_dff, 1);
 
 % High-pass filter
-fprintf('Doing high pass filter...\n');
-for i = 1:ncells
-    original = z_dff(i,:);
-    filtered = highpass(original, 0.1, 5);
-    env = abs(hilbert(filtered));
-    env = lowpass(env, 0.001, 5);
-    z_dff(i,:) = filtered ./ env;
-end
-
-%% Envelope normalization
-% ncell = 1;
-% original = z_dff(ncell,:);
-% env = abs(hilbert(original));
-% % Low-pass filter
-% %env = medfilt1(env, 100);
-% env = lowpass(env, 0.001, 5);
-% figure;
-% plot(original);
-% hold on;
-% plot(env)
-% %plot(original ./ env);
-% figure;
-% plot(original ./ env);
-
-
-
+% fprintf('Doing high pass filter...\n');
+% for i = 1:ncells
+%     original = z_dff(i,:);
+%     filtered = highpass(original, 0.1, 5);
+%     env = abs(hilbert(filtered));
+%     env = lowpass(env, 0.001, 5);
+%     z_dff(i,:) = filtered ./ env;
+% end
 
 %% Visualize
 imagesc(z_dff);
@@ -47,6 +35,7 @@ for i = 1:numel(ix)
    plot([ix(i) ix(i)], [-100 700], 'b');
    plot([ixCue(i) ixCue(i)], [-100 700], 'r');
 end
+
 
 %% Load and preprocess behavior file
 load(options.b_file_name);
@@ -76,10 +65,7 @@ dt_rew(~data.response.reward) = 0;
 dt_rew_frames = floor(dt_rew / 0.2);
 
 % For ball movement
-% samples_start = cell2mat(data.response.samples_start);
-%dX = data.response.dx;
 ballT = data.response.time;
-%ballT = ballT - ballT(1); % So that ballT starts at 0
 fs = (length(ballT) - 1) / (ballT(end) - ballT(1));
 dx_filt = lowpass(data.response.dx, 0.2);
 
@@ -99,23 +85,6 @@ ball_rewardT = data.response.time(rewardS);
 goodtrials = (choice(2:end) ~= 5) & (choice(1:end-1) ~= 5);
 goodtrials = logical([0 goodtrials]);
 goodtrialsID = find(goodtrials);
-%goodtrials = (choice ~= 5);
-%goodtrials(1) = 0;
-%goodtrials(258) = 0; %exclude this trial because neural activity has nan's
-%TODO: consider not excluding this
-
-% lstim = lstim(goodtrials);
-% rstim = rstim(goodtrials);
-% loc = loc(goodtrials);
-% choice = choice(goodtrials);
-% opp_contrasts = opp_contrasts(goodtrials);
-
-% prevchoice = data.response.choice(goodtrialsID - 1);
-
-
-% samples_start = samples_start(goodtrials);
-
-
 
 %% Make the predictors
 disp('Making predictor matrix...');
@@ -180,28 +149,10 @@ for i = 1:ntrialsgood
     
     resamp = interp1(uniqueT, dx_unique, tpoints);
     resamp(1) = dx_unique(1);
-    
-%     plot(ballT_trial, dx_trial);
-%     hold on;
-%     plot(tpoints, resamp);
-   
-    
-    
-    % Find the points of dx_filt that are closest to tpoints
-    %[~,ixdx] = min(abs(tpoints - ballT),[],1);
-    %balldata{i} = dx_filt(ixdx(1:end-1));
-    
+ 
     balldata{i} = resamp';
     speedCell{i} = abs(resamp)';
 end   
-
-%% Balldata visualization
-% start = ixdx(1);
-% final = ixdx(end);
-% figure;
-% plot(start:final, dx_filt(start:final));
-% hold on;
-% plot(ixdx, dx_filt(ixdx), 'o');
 
 %%
 figure;
@@ -252,15 +203,6 @@ spline_filename = 'Splines/spline_basis_9_order5_30pts.mat';
 
 [pred_allmat,pred_inds_cell,grouped_var_types] = make_predictor_matrix_generalcase(base_vars, pred_types_cell, spline_filename);
 
-% csvwrite('cue_onset.csv', cue_onsetCells)
-% csvwrite('left_onset.csv', left_onsetCells)
-% csvwrite('right_onset.csv', right_onsetCells)
-% csvwrite('rewards.csv', rewardsCell)
-% csvwrite('choices.csv', choiceGood)
-% csvwrite('previous_choices.csv', prevchoice)
-% csvwrite('difficulty.csv', difficultyGood)
-% csvwrite('movement.csv', balldata)
-
 %% Make the neural matrix (response)
 % Make the activity matrix
 goodtrialsID = find(goodtrials);
@@ -274,16 +216,10 @@ end
 neural_matmat = cell2mat(neural_act_mat);
 predall_matmat = cell2mat(pred_allmat);
 
-save(save_filename, 'neural_matmat', 'predall_matmat', 'neural_act_mat',...
-     'pred_allmat', 'left_onsetCells', 'right_onsetCells', 'rewardsCell');
-% figure;
-% cellID = 1;
-% plot(neural_matmat(:,cellID));
-% hold on;
-% 
-% % Low-pass filter
-% filtered = highpass(neural_matmat(:,cellID), 0.1, 5);
-% plot(filtered)
+if savefile
+    save(encoding_struct_fname, 'neural_matmat', 'predall_matmat', 'neural_act_mat',...
+         'pred_allmat', 'left_onsetCells', 'right_onsetCells', 'rewardsCell');
+end
 
 %% Do encoding model
 approach = 'norefit';
@@ -293,24 +229,6 @@ disp('Fitting encoding model...')
 [relative_contrib,~,r2val] = process_encoding_model(pred_allmat, pred_inds_cell, neural_act_mat, pred_types_cell,approach);
 fprintf('Mean R^2 value = %.2f%% \n', mean(r2val) * 100);
 
-% csvwrite('neural_activity.csv', neural_act_mat);
-%parameter breakdown
-%process_encoding_model is our function
-
-% arguments: pred_allmat      - (our x value!) cell array correspoding to a matrix of behavioral predictors, each term is a trial and contains a matrix where rows are timepoints and columns are behavioral predictors.
-%            pred_inds_cell   - cell array where each term has a vector of indices of the predictors that belong to a specific behavioral variable
-%            neural_act_mat   - (our y value!) cell array correspoding to a matrix of activity traces, each term is a trial and contains a matrix where rows are timepoints and columns are traces correspoding to different
-%                               neurons. Timepoints where the neuronal activity is not defined (e.g. a the imaging became unstable) are filled with NaNs (Currently it is assumed that before the first NaN
-%                               activity was always defined, and after the first NaN activity is never defined).
-%            pred_types_cell  - cell array where each terms indicates the type of behavioral variable ('event', 'whole-trial', or 'continuous').
-%            approach         - 'norefit': calculate regression weights with the full model, then zero the weights correspoding to the predictors being dropped. 'refit' : calculate regression weights
-%                               without the weights correspoding to the predictors being dropped (partial model).
-%
-% outputs:   relative_contrib - a matrix where rows are behavioral variables and columns are neurons. each term is the relative contribution of the behavioral variable to the neural activity.
-%            Fstat_mat        - a matrix where rows are behavioral variables and columns are neurons. each term is the F-statistic associated with the nested model comparison where the predicted variable is the
-%                               activity of the neuron, the full model is the model containing the predictors from al behavioral variables, and the partial model is the model containing the predictors from all
-%                               variables except the one being tested. The value of this statistic shoudl be compared to a distirbution of statistic values obtained by erforing the same oprateion on shuffled 
-%                               data, directly using the p-value assocaited with the staitstic is not valid given the autocorrelations in the data
 %% Visualize
 means = nanmean(relative_contrib, 1);
 stds = nanstd(relative_contrib, 1) / sqrt(size(relative_contrib, 1));
@@ -328,5 +246,109 @@ ylabel('Relative Contribution');
 xticklabels(factors);
 set(gca, 'FontSize', 16);
 
-%csvwrite('relative_contributions_raw.csv',relative_contrib)
+%% reorganization with cue_cells
+tfs = 15; %tfs = timeframes
+cue_cells = cell(tfs, 1); %within each cell is an added double of 173 values
+left = []; %only giving us the i (index) of trials that have left stimulus
+right = []; %same idea with right
+     
+stim_onset_per_trial = [];
+
+correct = [];
+incorrect = [];
+prev_right = [];
+prev_wrong = [];
+
+one = [];
+two = [];
+three = [];
+four = [];
+
+for i = 1:length(neural_act_mat) %looping through all the trials
+    
+    for j = 1:tfs
+       cue_cells{j} = [cue_cells{j}, neural_act_mat{i}(j)] ; %adding the neural activity that corresponds to each cue onset
+    end
+    
+    %finding out when the onset occurs
+    if find(left_onsetCells{i})
+        mid = find(left_onsetCells{i});
+        left = [left, i];
+    elseif find(right_onsetCells{i})
+        mid = find(right_onsetCells{i});
+        right = [right, i];
+    end
+    
+    %tracking which trials are correct
+    if any(rewardsCell{i}) %if a reward is presented
+        correct = [correct, i];
+        if ~(i + 1 == 174);
+            prev_right = [prev_right, i + 1];
+        end
+    else %when there's no reward
+        incorrect = [incorrect, i];
+        if i~=173;
+            prev_wrong = [prev_wrong, i + 1];
+        end
+    end
+    
+     %finding out the level of difficulty
+    val = difficultyGood(i);
+    %organizing the various levels of difficulty
+    if val == 0.3200
+        one = [one, i];
+    elseif val == 0.5600
+        two = [two, i];
+    elseif val == 0.6000
+        three = [three, i];
+    elseif val == 0.6400
+        four = [four, i];
+    end
+end
+
+if savefile
+    save(behavior_summary_fname, 'one', 'two', 'three', 'four', 'correct',...
+        'incorrect', 'left', 'right', 'prev_right', 'prev_wrong');
+end
+
+%% Define important epochs
+load(options.b_file_name);
+earlyCue = data.response.earlyCueTime';
+ts = data.response.trialstart';
+rewardtime = nan(size(ts));
+rewardtime(data.response.reward > 0) = data.response.rewardtimes';
+endtime = data.response.trialtime';
+responsetime = cellfun(@(x) x(end), data.response.timePC)';
+outcometime = ts + responsetime;
+
+% Convert to frame number
+ixCue = find_ix_frames(frametime, earlyCue);
+ixStart = find_ix_frames(frametime, ts);
+ixReward = find_ix_frames(frametime, rewardtime);
+ixReward(isnan(rewardtime)) = nan;
+ixOutcome = find_ix_frames(frametime, outcometime);
+ixEnd = find_ix_frames(frametime, endtime);
+
+% Find good trials
+ntrials = sum(ix < 9000);
+choice = data.response.choice(1:ntrials);
+prevchoice = [nan choice(1:end-1)];
+goodtrials = (choice ~= 5) & (prevchoice ~= 5);
+goodtrialsID = find(goodtrials);
+
+
+
+%% Save
+save(epoch_filename, 'ixCue', 'ixStart', 'ixReward', 'ixOutcome', 'ixEnd', 'goodtrials');
+
+
+
+%% Helper functions
+function ix = find_ix_frames(frametime, tlist)
+% frametime: array of frame times
+% tlist: array of time points
+% Returns the index of frames specified in tlist
+    dum = repmat(frametime,numel(tlist), 1);
+    [~, ix] = min(abs(dum - tlist),[], 2);
+end
 

@@ -44,6 +44,8 @@ found_cellarraybasevar = 0;
 for basevarctr = 1:num_base_vars
     if iscell(base_variables{basevarctr})
         for k=1:numtrials
+            disp(k)
+            disp(length(base_variables{basevarctr}{k}));
             num_points_per_trial(k) = length(base_variables{basevarctr}{k});
         end
         found_cellarraybasevar = 1;
