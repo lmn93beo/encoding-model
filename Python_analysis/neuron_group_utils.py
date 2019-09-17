@@ -310,6 +310,13 @@ def combine_groups_by_trials(group1, group2):
 
     return NeuronGroup(combined_neurons)
 
+def combine_groups_by_neurons(group_lst):
+    combined_neurons = []
+    for group in group_lst:
+        for neuron in group.neurons:
+            combined_neurons.append(neuron)
+
+    new_group = NeuronGroup(combined_neurons)
 
 
 

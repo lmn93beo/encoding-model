@@ -24,44 +24,22 @@ elif animal == 'TB41':
     encoding_fname = 'TB41_encoding_structs.mat'
     epoch_fname = 'TB41_epochs.mat'
 
-raw_behavior_summary = mat4py.loadmat(summary_fname)
-raw_encoding_struct = mat4py.loadmat(encoding_fname)
-epochs = mat4py.loadmat(epoch_fname)
+
+# Make an experiment object to capture the experiment
+exp_dict = dict(rate=samp_rate, window=window)
+exp = neuron_utils.Experiment(exp_dict)
+
+neuron_group = utils.make_neuron_group(encoding_fname, epoch_fname, exp)
 
 # Extract structures from the raw data
+raw_behavior_summary = mat4py.loadmat(summary_fname)
 one, two, three, four, correct, incorrect, left, right, prev_corr, prev_incorr = \
        utils.get_multiple_struct_fields_mat4py(raw_behavior_summary,
                         ['one', 'two', 'three', 'four', 'correct', 'incorrect',
                          'left', 'right', 'prev_right', 'prev_wrong'])
-
-ixCue, ixStart, ixReward, ixOutcome, ixEnd, goodtrials = utils.get_multiple_struct_fields_mat4py(epochs,
-                        ['ixCue', 'ixStart', 'ixReward', 'ixOutcome', 'ixEnd', 'goodtrials'])
-goodtrialsID = np.where(goodtrials)[0]
-
-stim_onset_per_trial = ixStart[goodtrialsID, 0] - ixCue[goodtrialsID, 0] + 1
-outcome_per_trial = ixOutcome[goodtrialsID, 0] - ixCue[goodtrialsID, 0] + 1
-
-
 # Being careful about one-indexing
 for i in [one, two, three, four, correct, incorrect, prev_corr, prev_incorr, left, right]:
     i -= 1
-
-neural_matmat, predall_matmat = \
-    utils.get_multiple_struct_fields_mat4py(raw_encoding_struct, ['neural_matmat', 'predall_matmat'])
-
-# Make an experiment object to capture the experiment
-exp_dict = dict(l_trials=left, r_trials=right, one_diff=one, two_diff=two, three_diff=three,
-                four_diff=four, correct=correct, incorrect=incorrect, prev_corr=prev_corr,
-                prev_incorr=prev_incorr, rate=samp_rate, window=window)
-exp = neuron_utils.Experiment(exp_dict)
-
-# Make a neuron group
-neurons = neuron_group_utils.make_neuron_list(raw_encoding_struct, 'neural_act_mat', exp=exp)
-
-for neuron in neurons:
-    neuron.align_activity(stim_onset_per_trial)
-neuron_group = neuron_group_utils.NeuronGroup(neurons)
-#neuron_group.plot_all_means(tvals=np.arange(window[0], window[1] + 1))
 
 # Make subgroup based on class
 class0 = np.where(neuron_group.classes == 0)[0]

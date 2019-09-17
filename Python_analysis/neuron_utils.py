@@ -184,10 +184,10 @@ class Experiment(object):
     A class of trackball experiment
     """
     def __init__(self, exp_dict):
-        self.l_trials = exp_dict['l_trials']
-        self.r_trials = exp_dict['r_trials']
-        self.ntrials = len(self.l_trials) + len(self.r_trials)
-        self.exp_dict = exp_dict
+        #self.l_trials = exp_dict['l_trials']
+        #self.r_trials = exp_dict['r_trials']
+        #self.ntrials = len(self.l_trials) + len(self.r_trials)
+        #self.exp_dict = exp_dict
         self.rate = exp_dict['rate']
         self.window = exp_dict['window']
 
