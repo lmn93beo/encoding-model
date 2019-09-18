@@ -46,7 +46,12 @@ else
 end
 
 sep = strfind(raw_xml,'<Frame relativeTime');
-frameNum = numel(sep); % MANUAL! WILL CHANGE
+if options.special
+    frameNum = 15000; %numel(sep); % MANUAL! WILL CHANGE
+else
+    frameNum = numel(sep);
+end
+
 for i = 1:frameNum
     curr_idx = strfind(raw_xml(sep(i):sep(i)+100),'"');
     toGet = sep(i)+curr_idx(1);

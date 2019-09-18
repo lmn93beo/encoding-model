@@ -8,8 +8,9 @@
 
 %% Load data
 options.f_folder_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model';
+options.f_file_name = 'F_wNeuropil_partial_tb41_03032017.txt';
 options.b_file_name = 'C:\Users\Sur lab\Dropbox (MIT)\Sur\ExternalCode\encoding-model/behavior_file_TB41.mat';
-
+options.suite2p = 0;
 options.neuropil = 1;
 options.neuropil_subt = 1;
 options.dt = [-3 5];
@@ -45,7 +46,7 @@ goodtrialsID = find(goodtrials);
 
 
 %% Save
-save('TB41_epochs.mat', 'ixCue', 'ixStart', 'ixReward', 'ixOutcome', 'ixEnd', 'goodtrials');
+%save('TB41_epochs.mat', 'ixCue', 'ixStart', 'ixReward', 'ixOutcome', 'ixEnd', 'goodtrials');
 
 
 

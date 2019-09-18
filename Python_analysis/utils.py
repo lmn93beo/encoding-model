@@ -99,27 +99,28 @@ def plot_example_neurons(neuron_group, id_list):
         plt.title(str(i))
 
 # 09/17/19:
-def make_neuron_group(encoding_fname, epoch_fname, exp):
+def make_neuron_group(encoding_fname, epoch_fname, exp, align_by='stim'):
     raw_encoding_struct = mat4py.loadmat(encoding_fname)
     epochs = mat4py.loadmat(epoch_fname)
 
-    ixCue, ixStart, ixReward, ixOutcome, ixEnd, goodtrials = get_multiple_struct_fields_mat4py(epochs,
-                                                                                                     ['ixCue',
+    ixCue, ixStart, ixReward, ixOutcome, ixEnd = get_multiple_struct_fields_mat4py(epochs, ['ixCue',
                                                                                                       'ixStart',
                                                                                                       'ixReward',
                                                                                                       'ixOutcome',
-                                                                                                      'ixEnd',
-                                                                                                      'goodtrials'])
-    goodtrialsID = np.where(goodtrials)[0]
+                                                                                                      'ixEnd'])
+    #goodtrialsID = np.where(goodtrials)[0]
 
-    stim_onset_per_trial = ixStart[goodtrialsID, 0] - ixCue[goodtrialsID, 0] + 1
-    outcome_per_trial = ixOutcome[goodtrialsID, 0] - ixCue[goodtrialsID, 0] + 1
+    stim_onset_per_trial = ixStart[:, 0] - ixCue[:, 0] + 1
+    outcome_per_trial = ixOutcome[:, 0] - ixCue[:, 0] + 1
 
     # Make a neuron group
     neurons = neuron_group_utils.make_neuron_list(raw_encoding_struct, 'neural_act_mat', exp=exp)
 
     for neuron in neurons:
-        neuron.align_activity(stim_onset_per_trial)
+        if align_by == 'stim':
+            neuron.align_activity(stim_onset_per_trial)
+        elif align_by == 'outcome':
+            neuron.align_activity(outcome_per_trial)
     neuron_group = neuron_group_utils.NeuronGroup(neurons)
 
     return neuron_group

@@ -172,14 +172,16 @@ class NeuronGroup(object):
         :param id_list: a list of neurons to plot
         :return: nothing
         """
-        if id_list == None:
+        if id_list is None:
             id_list = np.arange(self.n_neurons)
         dimx = int(np.sqrt(len(id_list)))
         dimy = int(len(id_list) / dimx) + 1
         for id, i in enumerate(id_list):
             plt.subplot(dimx, dimy, id + 1)
             neuron = self.neurons[i]
-            plt.errorbar(np.arange(len(neuron.mean_activity)), neuron.mean_activity, neuron.stderr_activity)
+            tpoints = np.linspace(neuron.exp.window[0] / neuron.exp.rate, neuron.exp.window[1] / neuron.exp.rate,
+                                  len(neuron.mean_activity))
+            plt.errorbar(tpoints, neuron.mean_activity, neuron.stderr_activity)
             plt.title(str(i))
 
 """
@@ -221,7 +223,7 @@ def make_neuron_list(rawdata, field, cell_lst=None, exp=None):
         cell_lst = np.arange(n_neurons)
 
     for cellid in cell_lst:
-        print('Making neuron # ', cellid, '...')
+        #print('Making neuron # ', cellid, '...')
         neuron = make_neuron_obj(rawdata, field, cellid, exp)
         neurons.append(neuron)
     return neurons
@@ -316,7 +318,46 @@ def combine_groups_by_neurons(group_lst):
         for neuron in group.neurons:
             combined_neurons.append(neuron)
 
-    new_group = NeuronGroup(combined_neurons)
+    new_group = NeuronGroupMultipleSessions(combined_neurons)
+    return new_group
 
 
+class NeuronGroupMultipleSessions(NeuronGroup):
+    """
+    A group for combining across sessions
+    """
+    def __init__(self, neuron_lst):
+        self.neurons = neuron_lst
+        self.n_neurons = len(neuron_lst)
+        self.exp = neuron_lst[0].exp
+
+        # Classify all neurons in group
+        classes = []
+        for neuron in self.neurons:
+            if len(neuron.mean_activity) == 0:
+                neuron.classify()
+            classes.append(neuron.neuron_class)
+        self.classes = np.array(classes)
+        self.class0cells = np.where(self.classes == 0)[0]
+        self.class1cells = np.where(self.classes == 1)[0]
+        self.class2cells = np.where(self.classes == 2)[0]
+
+        # Find mean activities for all neurons in group
+        mean_activities = []
+        stderr_activities = []
+        for neuron in self.neurons:
+            assert len(neuron.mean_activity) > 0
+            mean_activities.append(neuron.mean_activity)
+            stderr_activities.append(neuron.stderr_activity)
+        self.mean_activities = np.array(mean_activities)
+        self.stderr_activities = np.array(stderr_activities)
+
+    def make_subgroup_by_neurons(self, neurons):
+        """
+        Make a subgroup containing only neurons specified in neurons
+        :param neurons: a list of neurons to include
+        :return: a NeuronGroup object
+        """
+        subneurons = [self.neurons[i] for i in neurons]
+        return NeuronGroupMultipleSessions(subneurons)
 
