@@ -1,5 +1,5 @@
 Convention:
-- stim and choice: 2 means right, 1 means left
+- stim and choice: 2 means left, 1 means right
 
 Behavioral logs:
 - data.response:

@@ -6,6 +6,7 @@ options.neuropil = 1;
 options.neuropil_subt = 1;
 options.dt = [-3 5];
 options.suite2p = 0;
+options.special = 0;
 
 [trials_dff, trials_z_dff, dff, z_dff, frametimes, ix, ixCue] = getTrials_tb(options);
 ncells = size(z_dff, 1);
@@ -134,7 +135,9 @@ for i = 1:ntrialsgood
     T = trial_lengths(goodtrialsID(i));
     left_onset = zeros(T, 1);
     right_onset = zeros(T, 1);
-    if loc(goodtrialsID(i)) == 2 % L-stim
+    left_choice = zeros(T, 1);
+    right_choice = zeros(T, 1);
+    if loc(goodtrialsID(i)) == 2 % L-stim (?)
         left_onset(ix(goodtrialsID(i)) - ixCue(goodtrialsID(i)) + 1) = 1;
     elseif loc(goodtrialsID(i)) == 1 % R-stim
         right_onset(ix(goodtrialsID(i)) - ixCue(goodtrialsID(i)) + 1) = 1;
@@ -142,8 +145,18 @@ for i = 1:ntrialsgood
         error('Invalid trial. Only l/r choices are acceptable');
     end
     
+    if choice(goodtrialsID(i)) == 2 % L-choice
+        left_choice(ix(goodtrialsID(i)) - ixCue(goodtrialsID(i)) + 1) = 1;
+    elseif choice(goodtrialsID(i)) == 1 % R-choice
+        right_choice(ix(goodtrialsID(i)) - ixCue(goodtrialsID(i)) + 1) = 1;
+    else
+        error('Invalid choice')
+    end
+    
     left_onsetCells{i, 1} = left_onset;
     right_onsetCells{i, 1} = right_onset;
+    left_choiceCells{i, 1} = left_choice;
+    right_choiceCells{i, 1} = right_choice;
 end
 
 % Reward times
@@ -244,9 +257,10 @@ difficultyGood = difficulty(goodtrialsID);
  
 
 %% Make the predictor matrix
-pred_types_cell = {'event', 'event', 'event', 'event', 'continuous'};
+pred_types_cell = {'event', 'event', 'event', 'event', 'event', 'event', ...
+    'whole-trial', 'continuous'};
 base_vars = {cue_onsetCells, left_onsetCells, right_onsetCells,...
-     rewardsCell, balldata};
+     rewardsCell, left_choiceCells, right_choiceCells, difficulty, balldata};
 spline_filename = 'Splines/spline_basis_9_order5_30pts.mat';
 
 [pred_allmat,pred_inds_cell,grouped_var_types] = make_predictor_matrix_generalcase(base_vars, pred_types_cell, spline_filename);
