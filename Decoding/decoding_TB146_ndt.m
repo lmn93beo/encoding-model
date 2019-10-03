@@ -16,15 +16,16 @@ rand('state', 123);
 dates = {'20190724', '20190725', '20190726', '20190727',...
     '20190730', '20190801', '20190806', '20190807'};
 decoding_type = 'reward';
+align_by = 'outcome';
 
 for i = 1:numel(dates)
     fprintf('Doing file %d of %d...\n', i, numel(dates));
     date = dates{i};
-    do_decoding(date, decoding_type);
+    do_decoding(date, decoding_type, align_by);
 end
 
 
-function do_decoding(date, decoding_type)
+function do_decoding(date, decoding_type, align_by)
 options.f_folder_name = sprintf('C:\\Users\\Sur lab\\Dropbox (MIT)\\Sur\\Physiology_analysis\\146\\%s\\suite2p\\plane0', date);
 options.b_file_name = sprintf('C:\\Users\\Sur lab\\Dropbox (MIT)\\trackball-behavior\\Data\\146_all\\%s_trackball_0146.mat', date);
 root_filename = 'TB146';
@@ -34,6 +35,7 @@ savefile = 1;
 options.f_file_name = 'F_wNeuropil_partial_tb41_03032017.txt';
 options.special = 0;
 options.freq = 12.2;
+options.align_by = align_by;
 
 if strcmp(date, '20190724')
     options.special = 1;
@@ -46,8 +48,7 @@ options.neuropil_subt = 1;
 options.dt = [-3 5];
 options.suite2p = 1;
 
-[trials_dff, trials_z_dff, dff, z_dff, frametimes, ix, ixCue] = getTrials_tb(options);
-ncells = size(z_dff, 1);
+[trials_dff, ~, dff, ~, ~, ~, ~] = getTrials_tb(options);
 
 load(sprintf('C:\\Users\\Sur lab\\Dropbox (MIT)\\Sur\\ExternalCode\\encoding-model\\Python_analysis\\TB146_%s_epochs.mat', date));
 
@@ -191,7 +192,7 @@ plot_obj.significant_event_times = 0;
 plot_obj.plot_results;   % actually plot the results
 title(strcat(decoding_type, ' decoding, date:', date));
 
-saveas(gcf, strcat('TB146_decoding\TB146b_', decoding_type, '_', date, '.pdf'));
+saveas(gcf, strcat('TB146_decoding\TB146outcome_', decoding_type, '_', date, '.pdf'));
 end
 
    
