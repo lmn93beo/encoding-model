@@ -1,0 +1,13 @@
+TB146 sessions, 2019.09.27
+
+* 2019.07.24 | depth=367.3 | 69 neurons | 193 trials
+* 2019.07.25 | depth=338.3 | 71 neurons | 61 trials
+* 2019.07.26 | depth=285.5 | 69 neurons | 192 trials
+* 2019.07.27 | depth=373.15| 78 neurons | 205 trials
+* 2019.07.30 | depth=276.4 | 46 neurons | 168 trials
+* 2019.08.01 | depth=322.7 | 29 neurons | 226 trials
+* 2019.08.02 | depth=      | ? neurons  | ? trials
+* 2019.08.06 | depth=382.75| 44 neurons | 262 trials
+* 2019.08.07 | depth=275.83| 76 neurons | 275 trials
+
+--Total----- | ------------|

@@ -1,0 +1,9 @@
+20190724/suite2p/plane0/07242019_trackball_fov1-001.xml:        <SubindexedValue subindex="0" value="367.3" description="Z-Focus" />
+20190725/suite2p/plane0/TB146_20190725_trackball_LSC-001.xml:        <SubindexedValue subindex="0" value="338.83" description="Z-Focus" />
+20190725b/suite2p/plane0/TB146_20190725_trackball_LSC_2-001.xml:        <SubindexedValue subindex="0" value="338.83" description="Z-Focus" />
+20190726/suite2p/plane0/TB146_20190726_trackball_LSC-001.xml:        <SubindexedValue subindex="0" value="285.5" description="Z-Focus" />
+20190727/suite2p/plane0/TB146_20199727_trackball_RSC-001.xml:        <SubindexedValue subindex="0" value="373.15" description="Z-Focus" />
+20190730/suite2p/plane0/TB146_20199730_trackball_LSC-001-001.xml:        <SubindexedValue subindex="0" value="276.4" description="Z-Focus" />
+20190801/suite2p/plane0/tb146_20190801_LACC-001.xml:        <SubindexedValue subindex="0" value="322.7" description="Z-Focus" />
+20190806/suite2p/plane0/TB146_20190806_RACC-001.xml:        <SubindexedValue subindex="0" value="382.75" description="Z-Focus" />
+20190807/suite2p/plane0/tb146_20190807_RACC-001.xml:        <SubindexedValue subindex="0" value="275.83" description="Z-Focus" />
