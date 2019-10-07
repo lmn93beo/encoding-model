@@ -25,10 +25,10 @@ elif animal == 'TB41':
     epoch_fname = 'TB41_epochs.mat'
 
 
-#dates = ['20190724']
-dates = ['20190724', '20190726', '20190727', '20190730', '20190801', '20190806', '20190807']
-align_by = 'stim'
-split_by = 'difficulty'
+dates = ['20190727']
+#dates = ['20190724', '20190725', '20190726', '20190727', '20190730', '20190801', '20190806', '20190807']
+align_by = 'outcome'
+split_by = 'four-way'
 for date in dates:
     neuron_groups = []
     print(date)
@@ -37,7 +37,7 @@ for date in dates:
     epoch_fname = animal + '_' + date + '_epochs.mat'
 
     # Make an experiment object to capture the experiment
-    exp_dict = dict(rate=samp_rate, window=window)
+    exp_dict = dict(rate=samp_rate, window=window, animal=animal)
     exp = neuron_utils.Experiment(exp_dict)
 
     subgroup = utils.make_neuron_group(encoding_fname, epoch_fname, exp, align_by=align_by)
@@ -45,6 +45,8 @@ for date in dates:
     neuron_groups.append(subgroup)
 
     neuron_group = neuron_group_utils.combine_groups_by_neurons(neuron_groups)
+    print('Number of neurons: ', neuron_group.n_neurons)
+    print('Number of trials: ', neuron_group.neurons[0].ntrials)
 
     # Extract structures from the raw data
     raw_behavior_summary = mat4py.loadmat(summary_fname)
