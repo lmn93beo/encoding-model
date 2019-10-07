@@ -14,11 +14,14 @@ rand('state', 123);
 
 %% Load the data
 dates = {'20190724', '20190725', '20190726', '20190727',...
-    '20190730', '20190801', '20190806', '20190807'};
-decoding_type = 'reward';
-align_by = 'outcome';
+    '20190730', '20190801', '20190802', '20190806', '20190807'};
+decoding_type = 'choice';
+align_by = 'trial_start';
 
-for i = 1:numel(dates)
+for i = 4
+    if i == 2
+        continue
+    end
     fprintf('Doing file %d of %d...\n', i, numel(dates));
     date = dates{i};
     do_decoding(date, decoding_type, align_by);
@@ -28,10 +31,6 @@ end
 function do_decoding(date, decoding_type, align_by)
 options.f_folder_name = sprintf('C:\\Users\\Sur lab\\Dropbox (MIT)\\Sur\\Physiology_analysis\\146\\%s\\suite2p\\plane0', date);
 options.b_file_name = sprintf('C:\\Users\\Sur lab\\Dropbox (MIT)\\trackball-behavior\\Data\\146_all\\%s_trackball_0146.mat', date);
-root_filename = 'TB146';
-encoding_struct_fname = [root_filename '_encoding_structs'];
-behavior_summary_fname = [root_filename '_behavior_summary'];
-savefile = 1;
 options.f_file_name = 'F_wNeuropil_partial_tb41_03032017.txt';
 options.special = 0;
 options.freq = 12.2;
@@ -101,7 +100,7 @@ specific_binned_labels_names = 'side';
 % use 20 cross-validation splits (which means that 19 examples of each object are used for training and 1 example of each object is used for testing)
 % Confirm that we have enough trials
 nsites = num_sites_with_k_repeats(1);
-num_cv_splits = 20;
+num_cv_splits = 40;
 while num_sites_with_k_repeats(num_cv_splits + 1) < nsites
     num_cv_splits = ceil(num_cv_splits / 2);
 end
@@ -144,8 +143,8 @@ the_cross_validator.num_resample_runs = 2;  % usually more than 2 resample runs 
 
 % can greatly speed up the run-time of the analysis by not creating a full TCT matrix (i.e., only trainging and testing the classifier on the same time bin)
 the_cross_validator.test_only_at_training_times = 1;  
-
-
+the_cross_validator.display_progress.resample_run_time = 0;
+the_cross_validator.display_progress.zero_one_loss = 0;
 
 
 %%  10.  Run the decoding analysis   

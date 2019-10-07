@@ -147,6 +147,7 @@ class NeuronGroup(object):
                 plt.plot(tvals / self.exp.rate, mean_activities.T, color=color, alpha=0.2)
             else:
                 plt.plot(mean_activities.T, color=color, alpha=0.2)
+            plt.vlines(0, np.min(mean_activities), np.max(mean_activities), linestyles='dotted')
         elif style == 'heatmap':
             if normalize:
                 plt.imshow(mean_activities, cmap='bwr', aspect='auto', vmin=-1, vmax=1)
@@ -158,6 +159,7 @@ class NeuronGroup(object):
         # Subplot 2: plot mean over all neurons
         plt.subplot('312')
         plt.plot(tvals / self.exp.rate, np.mean(mean_activities, axis=0), color=color)
+        plt.vlines(0, np.min(mean_activities), np.max(mean_activities), linestyles='dotted')
 
         # Subplot 3: plot histograms
         plt.subplot('313')

@@ -1,10 +1,16 @@
 clear all
 close all
 
-date = '20190724';
+choice = input('Warning! Will overwrite existing encoding structs. Press 1 to continue, 0 to cancel \n >>');
+if choice ~= 1
+    error('User cancelled');
+end
+
+
+date = '20190807';
 options.f_folder_name = ['C:\Users\Sur lab\Dropbox (MIT)\Sur\Physiology_analysis\146\' date '\suite2p\plane0'];
 options.b_file_name = ['C:\Users\Sur lab\Dropbox (MIT)\trackball-behavior\Data\146_all/' date '_trackball_0146.mat'];
-root_filename = ['TB146_' date];
+root_filename = ['Python_analysis\TB146_' date];
 encoding_struct_fname = [root_filename '_encoding_structs'];
 behavior_summary_fname = [root_filename '_behavior_summary'];
 epoch_filename = [root_filename '_epochs'];
@@ -18,11 +24,13 @@ end
 
 options.neuropil = 1;
 options.neuropil_subt = 1;
-options.dt = [-3 5];
+options.dt = [-2 3];
 options.suite2p = 1;
+options.align_by = 'trial_start';
 
 [trials_dff, trials_z_dff, dff, z_dff, frametime, ix, ixCue] = getTrials_tb(options);
 ncells = size(z_dff, 1);
+save(['C:\Users\Sur lab\Dropbox (MIT)\Sur\evidence_analysis\TB146_' date '_trials_dff.mat'], 'trials_dff', 'trials_z_dff');
 
 % High-pass filter
 % fprintf('Doing high pass filter...\n');
@@ -144,7 +152,7 @@ ixEnd = find_ix_frames(frametime, endtime);
 %% Save
 save(epoch_filename, 'ixCue', 'ixStart', 'ixReward', 'ixOutcome', 'ixEnd');
 
-
+fprintf('Finished processing date %s\n', date);
 
 %% Helper functions
 function ix = find_ix_frames(frametime, tlist)

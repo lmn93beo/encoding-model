@@ -190,6 +190,7 @@ class Experiment(object):
         #self.exp_dict = exp_dict
         self.rate = exp_dict['rate']
         self.window = exp_dict['window']
+        self.animal = exp_dict['animal']
 
 def combine_neurons(neuron1, neuron2):
     """

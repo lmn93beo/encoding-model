@@ -21,81 +21,69 @@ elif animal == 'TB41':
     samp_rate = 5
     window = [-5, 16]
     summary_fname = 'TB41_behavior_summary.mat'
-    encoding_fname = 'TB41_encoding_structs.mat'
+    encoding_fname = 'TB41_encoding_structs_20190922.mat'
     epoch_fname = 'TB41_epochs.mat'
 
 
-dates = ['20190724']
-#dates = ['20190724', '20190726', '20190727', '20190730', '20190801', '20190806', '20190807']
-align_by = 'outcome'
+align_by = 'stim'
 split_by = 'four-way'
-for date in dates:
-    neuron_groups = []
-    print(date)
-    summary_fname = animal + '_' + date + '_behavior_summary.mat'
-    encoding_fname = animal + '_' + date + '_encoding_structs.mat'
-    epoch_fname = animal + '_' + date + '_epochs.mat'
 
-    # Make an experiment object to capture the experiment
-    exp_dict = dict(rate=samp_rate, window=window)
-    exp = neuron_utils.Experiment(exp_dict)
+# Make an experiment object to capture the experiment
+exp_dict = dict(rate=samp_rate, window=window, animal=animal)
+exp = neuron_utils.Experiment(exp_dict)
 
-    subgroup = utils.make_neuron_group(encoding_fname, epoch_fname, exp, align_by=align_by)
+subgroup = utils.make_neuron_group(encoding_fname, epoch_fname, exp, align_by=align_by)
 
-    neuron_groups.append(subgroup)
+# Extract structures from the raw data
+raw_behavior_summary = mat4py.loadmat(summary_fname)
+one, two, three, four, correct, incorrect, left, right, prev_corr, prev_incorr = \
+       utils.get_multiple_struct_fields_mat4py(raw_behavior_summary,
+                        ['one', 'two', 'three', 'four', 'correct', 'incorrect',
+                         'left', 'right', 'prev_right', 'prev_wrong'])
+# Being careful about one-indexing
+for i in [correct, incorrect, left, right, prev_corr, prev_incorr]:
+    i -= 1
 
-    neuron_group = neuron_group_utils.combine_groups_by_neurons(neuron_groups)
+# Make subgroup based on class
+class0 = np.where(subgroup.classes == 0)[0]
+class1 = np.where(subgroup.classes == 1)[0]
+class2 = np.where(subgroup.classes == 2)[0]
+class0_group = subgroup.make_subgroup_by_neurons(class0)
+class1_group = subgroup.make_subgroup_by_neurons(class1)
+class2_group = subgroup.make_subgroup_by_neurons(class2)
 
-    # Extract structures from the raw data
-    raw_behavior_summary = mat4py.loadmat(summary_fname)
-    correct, incorrect, left_stim, right_stim, left_choice, right_choice, opp_contrast = utils.get_multiple_struct_fields_mat4py(
-        raw_behavior_summary, ['correct', 'incorrect', 'left_stim', 'right_stim',
-                               'left_choice', 'right_choice', 'opp_contrasts']
-    )
-    # Being careful about one-indexing
-    for i in [correct, incorrect, left_stim, right_stim, left_choice, right_choice]:
-        i -= 1
+# Plot activity for each group
+plt.figure()
+class0_group.plot_all_means(color='b', tvals=np.arange(window[0], window[1] + 1))
+class1_group.plot_all_means(color='r', tvals=np.arange(window[0], window[1] + 1))
+class2_group.plot_all_means(color='g', tvals=np.arange(window[0], window[1] + 1))
+plt.show()
 
-    # Make subgroup based on class
-    #class0 = np.where(neuron_group.classes == 0)[0]
-    #class1 = np.where(neuron_group.classes == 1)[0]
-    #class2 = np.where(neuron_group.classes == 2)[0]
-    class0 = np.array([3,7,10,11,12,18,21,24,27,28,33,34,35,39,42,45,46,47,58,61])
-    class1 = np.array([14,15,17,19,22,25,26,40,41,48,49,50,51,53,54])
-    class2 = np.array([4,5,6,13,23,38,44,56,59,65,66,67,68])
-    #class0_group = neuron_group.make_subgroup_by_neurons(class0)
-    #class1_group = neuron_group.make_subgroup_by_neurons(class1)
-    #class2_group = neuron_group.make_subgroup_by_neurons(class2)
+'''
+plt.figure()
+if split_by == 'four-way':
+    neuron_group_A = neuron_group.make_subgroup_by_trials(np.intersect1d(incorrect, left_choice))
+    neuron_group_B = neuron_group.make_subgroup_by_trials(np.intersect1d(incorrect, right_choice))
+    neuron_group_C = neuron_group.make_subgroup_by_trials(np.intersect1d(correct, left_choice))
+    neuron_group_D = neuron_group.make_subgroup_by_trials(np.intersect1d(correct, right_choice))
 
-    # Plot activity for each group
-    #plt.figure()
-    #class0_group.plot_all_means(color='b', tvals=np.arange(window[0], window[1] + 1))
-    #class1_group.plot_all_means(color='r', tvals=np.arange(window[0], window[1] + 1))
-    #class2_group.plot_all_means(color='g', tvals=np.arange(window[0], window[1] + 1))
+elif split_by == 'outcome':
+    neuron_group_A = neuron_group.make_subgroup_by_trials(np.intersect1d(correct, left_choice))
+    neuron_group_B = neuron_group.make_subgroup_by_trials(np.intersect1d(incorrect, left_choice))
 
-    plt.figure()
-    if split_by == 'four-way':
-        neuron_group_A = neuron_group.make_subgroup_by_trials(np.intersect1d(incorrect, left_choice))
-        neuron_group_B = neuron_group.make_subgroup_by_trials(np.intersect1d(incorrect, right_choice))
-        neuron_group_C = neuron_group.make_subgroup_by_trials(np.intersect1d(correct, left_choice))
-        neuron_group_D = neuron_group.make_subgroup_by_trials(np.intersect1d(correct, right_choice))
+elif split_by == 'difficulty':
+    neuron_group_A = neuron_group.make_subgroup_by_trials(np.where(opp_contrast == 0)[0])
+    neuron_group_B = neuron_group.make_subgroup_by_trials(np.where(opp_contrast == 0.48)[0])
 
-    elif split_by == 'outcome':
-        neuron_group_A = neuron_group.make_subgroup_by_trials(np.intersect1d(correct, left_choice))
-        neuron_group_B = neuron_group.make_subgroup_by_trials(np.intersect1d(incorrect, left_choice))
+neuron_group_A.plot_example_neurons(np.arange(min(100, neuron_group.n_neurons)))
+neuron_group_B.plot_example_neurons(np.arange(min(100, neuron_group.n_neurons)))
 
-    elif split_by == 'difficulty':
-        neuron_group_A = neuron_group.make_subgroup_by_trials(np.where(opp_contrast == 0)[0])
-        neuron_group_B = neuron_group.make_subgroup_by_trials(np.where(opp_contrast == 0.48)[0])
+if split_by == 'four-way':
+    neuron_group_C.plot_example_neurons(np.arange(min(100, neuron_group.n_neurons)))
+    neuron_group_D.plot_example_neurons(np.arange(min(100, neuron_group.n_neurons)))
+plt.legend(['IL', 'IR', 'CL', 'CR'])
 
-    neuron_group_A.plot_example_neurons(np.arange(min(100, neuron_group.n_neurons)))
-    neuron_group_B.plot_example_neurons(np.arange(min(100, neuron_group.n_neurons)))
-
-    if split_by == 'four-way':
-        neuron_group_C.plot_example_neurons(np.arange(min(100, neuron_group.n_neurons)))
-        neuron_group_D.plot_example_neurons(np.arange(min(100, neuron_group.n_neurons)))
-    plt.legend(['IL', 'IR', 'CL', 'CR'])
-
+'''
 '''
 # Compare reward and non-reward
 plt.figure(figsize=(15, 15))

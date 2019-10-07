@@ -97,21 +97,31 @@ def plot_example_neurons(neuron_group, id_list):
         neuron = neuron_group.neurons[i]
         plt.errorbar(np.arange(len(neuron.mean_activity)), neuron.mean_activity, neuron.stderr_activity)
         plt.title(str(i))
+        plt.xlabel('Time from stim onset (s)')
+        plt.ylabel('dF/F')
+        plt.vlines(0, np.min(neuron.mean_activity), np.max(neuron.mean_activity), linestyles='dotted')
 
 # 09/17/19:
 def make_neuron_group(encoding_fname, epoch_fname, exp, align_by='stim'):
     raw_encoding_struct = mat4py.loadmat(encoding_fname)
     epochs = mat4py.loadmat(epoch_fname)
 
-    ixCue, ixStart, ixReward, ixOutcome, ixEnd = get_multiple_struct_fields_mat4py(epochs, ['ixCue',
-                                                                                                      'ixStart',
-                                                                                                      'ixReward',
-                                                                                                      'ixOutcome',
-                                                                                                      'ixEnd'])
-    #goodtrialsID = np.where(goodtrials)[0]
+    #ixCue, ixStart, ixReward, ixOutcome, ixEnd = get_multiple_struct_fields_mat4py(epochs, ['ixCue',
 
-    stim_onset_per_trial = ixStart[:, 0] - ixCue[:, 0] + 1
-    outcome_per_trial = ixOutcome[:, 0] - ixCue[:, 0] + 1
+    if exp.animal == 'TB41':
+        ixCue, ixStart, ixReward, ixOutcome, ixEnd, goodtrials = get_multiple_struct_fields_mat4py(epochs, ['ixCue',
+        'ixStart', 'ixReward', 'ixOutcome', 'ixEnd', 'goodtrials'])
+
+        goodtrialsID = np.where(goodtrials)[0]
+    elif exp.animal == 'TB146':
+        ixCue, ixStart, ixReward, ixOutcome, ixEnd = get_multiple_struct_fields_mat4py(epochs, ['ixCue',
+        'ixStart', 'ixReward', 'ixOutcome', 'ixEnd'])
+
+        goodtrialsID = np.arange(ixStart.shape[0])
+
+
+    stim_onset_per_trial = ixStart[goodtrialsID, 0] - ixCue[goodtrialsID, 0] + 1
+    outcome_per_trial = ixOutcome[goodtrialsID, 0] - ixCue[goodtrialsID, 0] + 1
 
     # Make a neuron group
     neurons = neuron_group_utils.make_neuron_list(raw_encoding_struct, 'neural_act_mat', exp=exp)

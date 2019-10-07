@@ -46,7 +46,7 @@ else
 end
 
 sep = strfind(raw_xml,'<Frame relativeTime');
-if options.special
+if options.special % Made specifically for TB146 on 2019.07.24
     frameNum = 15000; %numel(sep); % MANUAL! WILL CHANGE
 else
     frameNum = numel(sep);
@@ -70,18 +70,29 @@ avgFR = 1/exactPeriod;
 
 %% Split into trials
 load(b_file_name);
+
+% Find relevant indices for important epochs
 ts = data.response.trialstart';
 earlyCue = data.response.earlyCueTime';
-
+responsetime = cellfun(@(x) x(end), data.response.timePC)';
+outcometime = ts + responsetime;
 dum = repmat(frametime,numel(ts),1);
 [~,ix] = min(abs(dum - ts),[],2);
 [~,ixCue] = min(abs(dum - earlyCue), [], 2);
-% ix gives the 
+[~,ixOutcome] = min(abs(dum - outcometime), [], 2);
+ 
 
 dt_frame = round(dt*avgFR);
 
-ix_range = repmat(dt_frame(1):dt_frame(2),numel(ix),1); 
-ix_range = ix_range + ix;
+switch options.align_by
+    case 'trial_start'
+        ix_range = repmat(dt_frame(1):dt_frame(2),numel(ix),1); 
+        ix_range = ix_range + ix;
+    case 'outcome'
+        ix_range = repmat(dt_frame(1):dt_frame(2),numel(ixOutcome),1); 
+        ix_range = ix_range + ixOutcome;
+end
+    
 ix_range(ix_range < 1) = 1;
 
 nCells = size(dff,1);
