@@ -123,9 +123,11 @@ class NeuronGroup(object):
             mean_activities = mean_activities
 
 
-        # Subtract the baseline of first 5 frames
-        baseline = np.mean(mean_activities[:, 0:5], axis=1)
-        #mean_activities = (mean_activities.T - baseline).T
+        # Subtract the baseline of first n frames
+        n = - self.exp.window[0]
+        print(n)
+        baseline = np.mean(mean_activities[:, 0:n], axis=1)
+        mean_activities = (mean_activities.T - baseline).T
 
 
         # Normalize

@@ -52,6 +52,7 @@ full_R2_vec = zeros(numcells,1);
 partial_R2_vec = zeros(numcells,length(pred_inds_cell));
 relative_contrib = zeros(numcells,length(pred_inds_cell));
 f = waitbar(0,'Please wait...');
+disp('Warning, line 55 of process_encoding_model changed!');
 for cellctr = 1:numcells
     waitbar(cellctr / numcells, f,...
         sprintf('Fitting cell %d of %d...\n', cellctr, numcells));

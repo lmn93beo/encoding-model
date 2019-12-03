@@ -58,10 +58,7 @@ for i = 1:frameNum
     if i == 1 %because first entry for "relativetime" is 0
         frametime(i) = str2num(raw_xml(1,toGet));
     else
-        if i == 15000
-            disp(i);
-        end
-        frametime(i) = str2num(raw_xml(1,toGet:toGet+8));
+        frametime(i) = str2num(raw_xml(1,toGet:toGet+7));
     end
 end
 

@@ -7,6 +7,7 @@ options.neuropil_subt = 1;
 options.dt = [-3 5];
 options.suite2p = 0;
 options.special = 0;
+options.align_by = 'trial_start';
 
 [trials_dff, trials_z_dff, dff, z_dff, frametimes, ix, ixCue] = getTrials_tb(options);
 ncells = size(z_dff, 1);
@@ -257,10 +258,9 @@ difficultyGood = difficulty(goodtrialsID);
  
 
 %% Make the predictor matrix
-pred_types_cell = {'event', 'event', 'event', 'event', 'event', 'event', ...
-    'whole-trial', 'continuous'};
+pred_types_cell = {'event', 'event', 'event', 'event', 'whole-trial', 'continuous'};
 base_vars = {cue_onsetCells, left_onsetCells, right_onsetCells,...
-     rewardsCell, left_choiceCells, right_choiceCells, difficulty, balldata};
+     rewardsCell, difficulty, balldata};
 spline_filename = 'Splines/spline_basis_9_order5_30pts.mat';
 
 [pred_allmat,pred_inds_cell,grouped_var_types] = make_predictor_matrix_generalcase(base_vars, pred_types_cell, spline_filename);

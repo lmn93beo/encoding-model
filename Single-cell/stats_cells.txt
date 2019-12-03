@@ -1,0 +1,14 @@
+We computed the mean dF/F in the window from 0s - 1s after stimulus onset, and performed a 2-way ANOVA with factors stimulus (left/ right), and choice (left/right). For the error-selective unit, the window was 0s - 2s.
+
+Stimulus selective unit: 
+- Main effect of stimulus: F(1, 137) = 10.86; p < 0.01
+- Main effect of choice: F(1, 137) = 0.42; p = 0.52
+
+Choice selective unit:
+- Main effect of stimulus: F(1, 263) = 0.89; p = 0.35
+- Main effect of choice: F(1, 263) = 32.34; p < 10^-5
+
+Reward selective unit:
+- Main effect of stimulus: F(1, 158) = 1.72; p = 0.192
+- Main effect of choice: F(1, 158) = 2.26; p = 0.13
+- Stims * Choice interaction: F(1, 158) = 25.87; p < 10^-3
